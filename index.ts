@@ -1,1 +1,1 @@
-console.log("Hello");
+require("./cli/cli.js").cli(process.argv);
