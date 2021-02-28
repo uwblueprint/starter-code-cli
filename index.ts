@@ -1,1 +1,3 @@
-require("./cli/cli.js").cli(process.argv);
+import cli from "./cli";
+
+cli(process.argv);
