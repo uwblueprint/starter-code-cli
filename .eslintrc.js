@@ -12,5 +12,9 @@ module.exports = {
     "prettier",
     "plugin:prettier/recommended",
   ],
-  rules: {},
+  rules: {
+    "no-console": "off",
+    "no-plusplus": "off",
+    "no-continue": "off",
+  },
 };

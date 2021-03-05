@@ -1,0 +1,9 @@
+{
+  "actions": [
+    {
+      "type": "remove",
+      "tags": ["@remove"]
+    }
+  ],
+  "files": ["*.js"]
+}
