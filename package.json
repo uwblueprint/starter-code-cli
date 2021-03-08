@@ -9,10 +9,14 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "lint": "eslint . --ext .ts,.js",
-    "lint-fix": "eslint . --ext .ts,.js --fix && prettier --write **/*.ts **/*.js"
+    "lint-fix": "eslint . --ext .ts,.js --fix && prettier --write **/*.ts **/*.js",
+    "prod": "tsc -p . && node bin/index.js"
   },
   "devDependencies": {
+    "@types/figlet": "^1.2.1",
+    "@types/inquirer": "^7.3.1",
     "@types/node": "^14.14.31",
+    "@types/yargs": "^16.0.0",
     "@typescript-eslint/eslint-plugin": "^4.15.2",
     "@typescript-eslint/parser": "^4.15.2",
     "eslint": "^7.20.0",
@@ -24,5 +28,11 @@
     "ts-node": "^9.1.1",
     "typescript": "^4.2.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "boxen": "^5.0.0",
+    "chalk": "^4.1.0",
+    "figlet": "^1.5.0",
+    "inquirer": "^8.0.0",
+    "yargs": "^16.2.0"
+  }
 }
