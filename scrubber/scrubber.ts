@@ -1,5 +1,23 @@
 import fs from "fs";
-import { ScrubberActionType, ScrubberConfig } from "./scrubberTypes";
+import path from "path";
+import {
+  ScrubberAction,
+  TagNameToAction,
+  ScrubberConfig,
+} from "./scrubberTypes";
+
+const TAG_START_CHAR = "{";
+const TAG_END_CHAR = "}";
+
+function scrubberActionsToDict(actions: ScrubberAction[]): TagNameToAction {
+  const dict: TagNameToAction = {};
+  actions.forEach((action) => {
+    action.tags.forEach((tag: string) => {
+      dict[tag] = action.type;
+    });
+  });
+  return dict;
+}
 
 async function getConfigFile(filename: string): Promise<ScrubberConfig> {
   try {
@@ -11,48 +29,112 @@ async function getConfigFile(filename: string): Promise<ScrubberConfig> {
   }
 }
 
-class Scrubber {
-  tags: { [key: string]: ScrubberActionType } = {};
+async function scrubFile(
+  filePath: string,
+  tags: TagNameToAction,
+  isDryRun: boolean,
+) {
+  const text: string = await fs.readFileSync(filePath, "utf8");
+  const lines: string[] = text.split("\n");
+  const scrubbedLines: string[] = [];
 
-  async parseConfig(filename: string): Promise<void> {
-    const config = await getConfigFile(filename);
-    config.actions.forEach((action) => {
-      action.tags.forEach((tag: string) => {
-        this.tags[tag] = action.type;
-      });
-    });
-  }
+  let skip = false;
 
-  async start(): Promise<void> {
-    const text: string = await fs.readFileSync("test", "utf8");
-    const lines: string[] = text.split("\n");
-    const scrubbedLines: string[] = [];
+  for (let i = 0; i < lines.length; ++i) {
+    const line = lines[i];
+    if (line.length === 0) {
+      scrubbedLines.push(line);
+      continue;
+    }
 
-    // TODO Handle nested tags
+    // Split on whitespace
+    const tokens = line.split(/[ ]+/);
 
-    const tagsSeen: string[] = [];
-    let skip = false;
+    if (tokens[0] in tags && tokens.length !== 2) {
+      console.warn(
+        `WARNING line ${
+          i + 1
+        }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+      );
+      continue;
+    }
 
-    for (let i = 0; i < lines.length; ++i) {
-      const line = lines[i];
+    // If this line is not a potential tag, skip.
+    if (tokens[0] in tags || tokens[1] in tags) {
+      const tag = tokens[0] in tags ? tokens[0] : tokens[1];
+      const brace = tag === tokens[0] ? tokens[1] : tokens[0];
 
-      if (line in this.tags) {
-        if (tagsSeen.length && tagsSeen[tagsSeen.length - 1] === line) {
-          tagsSeen.pop();
-        } else {
-          tagsSeen.push(line);
-        }
-        if (this.tags[line] === "remove" && tagsSeen.length < 2) {
-          skip = tagsSeen.length > 0;
-        }
-        continue;
+      if (brace === tokens[1] && brace !== TAG_START_CHAR) {
+        throw new Error("Malformed tag line: expected '{' after tag name'");
       }
 
-      if (skip) continue;
+      if (brace === tokens[0] && brace !== TAG_END_CHAR) {
+        throw new Error("Malformed tag line: expected '}' before tag name'");
+      }
 
-      scrubbedLines.push(line);
+      // NOTE: nested tagging is not currently expected and will lead to unexpected behaviour.
+
+      if (tags[tag] === "remove") {
+        skip = brace === TAG_START_CHAR;
+      }
+
+      // We always scrub tags from the final file.
+      continue;
     }
-    await fs.writeFileSync("test", scrubbedLines.join("\n"));
+
+    if (skip) {
+      if (isDryRun) {
+        console.log(`Skipping line ${i + 1}`);
+      }
+      continue;
+    }
+
+    scrubbedLines.push(line);
+  }
+
+  if (isDryRun) return;
+  await fs.writeFileSync(filePath, scrubbedLines.join("\n"));
+}
+
+async function scrubDir(dir: string, tags: TagNameToAction, isDryRun: boolean) {
+  const files = await fs.readdirSync(dir);
+  const promises = files.map(
+    async (name: string): Promise<void> => {
+      const filePath = path.join(dir, name);
+      const stat = fs.statSync(filePath);
+      if (stat.isFile()) {
+        return scrubFile(filePath, tags, isDryRun);
+      }
+      if (stat.isDirectory()) {
+        return scrubDir(filePath, tags, isDryRun);
+      }
+      return Promise.resolve();
+    },
+  );
+  await Promise.all(promises);
+}
+
+class Scrubber {
+  tags: TagNameToAction = {};
+
+  dirs: string[] = [];
+
+  async parseConfig(filename: string): Promise<void> {
+    // TODO validate config (e.g.properly formed tag names)
+    const config = await getConfigFile(filename);
+    this.tags = scrubberActionsToDict(config.actions);
+    this.dirs = config.dirs;
+  }
+
+  // Scrub files
+  async start(
+    actions: ScrubberAction[],
+    isDryRun: boolean = false,
+  ): Promise<void> {
+    const tags = { ...this.tags, ...scrubberActionsToDict(actions) };
+
+    // TODO: specify file extensions?
+    await Promise.all(this.dirs.map((dir) => scrubDir(dir, tags, isDryRun)));
   }
 }
 

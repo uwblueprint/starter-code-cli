@@ -1,13 +1,9 @@
 {
   "actions": [
     {
-      "type": "remove",
-      "tags": ["@remove"]
-    },
-    {
-      "type": "remove",
-      "tags": ["@remove2"]
+      "type": "keep",
+      "tags": ["@remove", "@remove2"]
     }
   ],
-  "files": ["*.js"]
+  "dirs": ["test_dir"]
 }

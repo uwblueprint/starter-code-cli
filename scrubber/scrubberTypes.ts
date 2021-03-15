@@ -11,5 +11,7 @@ export type ScrubberAction = {
 
 export type ScrubberConfig = {
   actions: ScrubberAction[];
-  files: string[];
+  dirs: string[];
 };
+
+export type TagNameToAction = { [key: string]: ScrubberActionType };
