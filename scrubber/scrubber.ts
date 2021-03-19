@@ -9,6 +9,12 @@ import {
 const TAG_START_CHAR = "{";
 const TAG_END_CHAR = "}";
 
+const FILE_TYPE_COMMENT: { [key: string]: string } = {
+  js: "//",
+  ts: "//",
+  py: "#",
+};
+
 function scrubberActionsToDict(actions: ScrubberAction[]): TagNameToAction {
   const dict: TagNameToAction = {};
   actions.forEach((action) => {
@@ -24,7 +30,7 @@ async function getConfigFile(filename: string): Promise<ScrubberConfig> {
     const configString = await fs.readFileSync(filename, "utf8");
     return JSON.parse(configString);
   } catch (err) {
-    console.log("Failed to read file ", filename);
+    console.error("Failed to read file ", filename);
     throw err;
   }
 }
@@ -33,67 +39,76 @@ async function scrubFile(
   filePath: string,
   tags: TagNameToAction,
   isDryRun: boolean,
-) {
-  const text: string = await fs.readFileSync(filePath, "utf8");
-  const lines: string[] = text.split("\n");
-  const scrubbedLines: string[] = [];
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, { encoding: "utf8" }, async (err, text) => {
+      if (err) {
+        reject(err);
+      }
+      const lines: string[] = text.split("\n");
+      const scrubbedLines: string[] = [];
+      let skip = false;
 
-  let skip = false;
+      for (let i = 0; i < lines.length; ++i) {
+        const line = lines[i];
+        if (line.length === 0) {
+          scrubbedLines.push(line);
+          continue;
+        }
 
-  for (let i = 0; i < lines.length; ++i) {
-    const line = lines[i];
-    if (line.length === 0) {
-      scrubbedLines.push(line);
-      continue;
-    }
+        // Split on whitespace
+        const tokens = line.trim().split(/[ ]+/);
 
-    // Split on whitespace
-    const tokens = line.split(/[ ]+/);
+        if (tokens[0] in tags && tokens.length !== 2) {
+          console.warn(
+            `WARNING line ${
+              i + 1
+            }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+          );
+          continue;
+        }
 
-    if (tokens[0] in tags && tokens.length !== 2) {
-      console.warn(
-        `WARNING line ${
-          i + 1
-        }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
-      );
-      continue;
-    }
+        if (tokens[0] in tags || tokens[1] in tags) {
+          const tag = tokens[0] in tags ? tokens[0] : tokens[1];
+          const brace = tag === tokens[0] ? tokens[1] : tokens[0];
 
-    // If this line is not a potential tag, skip.
-    if (tokens[0] in tags || tokens[1] in tags) {
-      const tag = tokens[0] in tags ? tokens[0] : tokens[1];
-      const brace = tag === tokens[0] ? tokens[1] : tokens[0];
+          if (brace === tokens[1] && brace !== TAG_START_CHAR) {
+            throw new Error("Malformed tag line: expected '{' after tag name'");
+          }
 
-      if (brace === tokens[1] && brace !== TAG_START_CHAR) {
-        throw new Error("Malformed tag line: expected '{' after tag name'");
+          if (brace === tokens[0] && brace !== TAG_END_CHAR) {
+            throw new Error(
+              "Malformed tag line: expected '}' before tag name'",
+            );
+          }
+
+          // NOTE: nested tagging is not currently expected and will lead to unexpected behaviour.
+
+          if (tags[tag] === "remove") {
+            skip = brace === TAG_START_CHAR;
+          }
+
+          // We always scrub tags from the final file.
+          continue;
+        }
+
+        if (skip) {
+          if (isDryRun) {
+            console.log(`Skipping line ${i + 1}`);
+          }
+          continue;
+        }
+
+        scrubbedLines.push(line);
       }
 
-      if (brace === tokens[0] && brace !== TAG_END_CHAR) {
-        throw new Error("Malformed tag line: expected '}' before tag name'");
-      }
+      if (isDryRun) return;
 
-      // NOTE: nested tagging is not currently expected and will lead to unexpected behaviour.
+      fs.writeFileSync(filePath, scrubbedLines.join("\n"));
 
-      if (tags[tag] === "remove") {
-        skip = brace === TAG_START_CHAR;
-      }
-
-      // We always scrub tags from the final file.
-      continue;
-    }
-
-    if (skip) {
-      if (isDryRun) {
-        console.log(`Skipping line ${i + 1}`);
-      }
-      continue;
-    }
-
-    scrubbedLines.push(line);
-  }
-
-  if (isDryRun) return;
-  await fs.writeFileSync(filePath, scrubbedLines.join("\n"));
+      resolve();
+    });
+  });
 }
 
 async function scrubDir(dir: string, tags: TagNameToAction, isDryRun: boolean) {
