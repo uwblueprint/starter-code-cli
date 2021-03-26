@@ -1,0 +1,9 @@
+{
+  "actions": [
+    {
+      "type": "keep",
+      "tags": ["@remove", "@remove2"]
+    }
+  ],
+  "dirs": ["test_dir"]
+}

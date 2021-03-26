@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "lint": "eslint . --ext .ts,.js",
-    "lint-fix": "eslint . --ext .ts,.js --fix && prettier --write **/*.ts **/*.js",
+    "lint-fix": "eslint . --ext .ts,.js --fix",
     "prod": "tsc -p . && node bin/index.js"
   },
   "devDependencies": {
