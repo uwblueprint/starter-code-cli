@@ -11,6 +11,7 @@ const TAG_END_CHAR = "}";
 
 const FILE_TYPE_COMMENT: { [key: string]: string } = {
   js: "//",
+  json: "//",
   ts: "//",
   py: "#",
 };
@@ -45,12 +46,18 @@ async function scrubFile(
       if (err) {
         reject(err);
       }
-      const lines: string[] = text.split("\n");
+
+      const ext = filePath.split(".").pop();
+      const commentType = ext && FILE_TYPE_COMMENT[ext];
       const scrubbedLines: string[] = [];
       let skip = false;
 
+      const lines: string[] = text.split("\n");
+
       for (let i = 0; i < lines.length; ++i) {
         const line = lines[i];
+        let tryProcessTag = true;
+
         if (line.length === 0) {
           scrubbedLines.push(line);
           continue;
@@ -59,37 +66,53 @@ async function scrubFile(
         // Split on whitespace
         const tokens = line.trim().split(/[ ]+/);
 
-        if (tokens[0] in tags && tokens.length !== 2) {
-          console.warn(
-            `WARNING line ${
-              i + 1
-            }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
-          );
-          continue;
+        if (commentType) {
+          if (tokens[0] !== commentType) {
+            tryProcessTag = false;
+          }
+          tokens.shift();
         }
 
-        if (tokens[0] in tags || tokens[1] in tags) {
-          const tag = tokens[0] in tags ? tokens[0] : tokens[1];
-          const brace = tag === tokens[0] ? tokens[1] : tokens[0];
-
-          if (brace === tokens[1] && brace !== TAG_START_CHAR) {
-            throw new Error("Malformed tag line: expected '{' after tag name'");
-          }
-
-          if (brace === tokens[0] && brace !== TAG_END_CHAR) {
-            throw new Error(
-              "Malformed tag line: expected '}' before tag name'",
+        if (tryProcessTag) {
+          if (tokens[0] in tags && tokens.length !== 2) {
+            console.warn(
+              `WARNING line ${
+                i + 1
+              }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
             );
+            scrubbedLines.push(line);
+            continue;
           }
 
-          // NOTE: nested tagging is not currently expected and will lead to unexpected behaviour.
+          if (tokens[0] in tags || tokens[1] in tags) {
+            const tag = tokens[0] in tags ? tokens[0] : tokens[1];
+            const brace = tag === tokens[0] ? tokens[1] : tokens[0];
 
-          if (tags[tag] === "remove") {
-            skip = brace === TAG_START_CHAR;
+            if (brace === tokens[1] && brace !== TAG_START_CHAR) {
+              throw new Error(
+                `Malformed tag ${filePath}:line ${
+                  i + 1
+                }: expected '{' after tag name`,
+              );
+            }
+
+            if (brace === tokens[0] && brace !== TAG_END_CHAR) {
+              throw new Error(
+                `Malformed tag ${filePath}:line ${
+                  i + 1
+                }: expected '}' before tag name`,
+              );
+            }
+
+            // NOTE: nested tagging is not currently expected and will lead to unexpected behaviour.
+
+            if (tags[tag] === "remove") {
+              skip = brace === TAG_START_CHAR;
+            }
+
+            // We always scrub tags from the final file.
+            continue;
           }
-
-          // We always scrub tags from the final file.
-          continue;
         }
 
         if (skip) {
