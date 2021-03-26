@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import cli from "./cli";
 
 import Scrubber from "./scrubber/scrubber";
