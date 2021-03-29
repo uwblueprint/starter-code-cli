@@ -134,22 +134,24 @@ async function scrubFile(
   });
 }
 
-async function scrubDir(dir: string, tags: TagNameToAction, isDryRun: boolean) {
-  const files = await fs.readdirSync(dir);
-  const promises = files.map(
-    async (name: string): Promise<void> => {
-      const filePath = path.join(dir, name);
-      const stat = fs.statSync(filePath);
-      if (stat.isFile()) {
-        return scrubFile(filePath, tags, isDryRun);
-      }
-      if (stat.isDirectory()) {
-        return scrubDir(filePath, tags, isDryRun);
-      }
-      return Promise.resolve();
-    },
-  );
-  await Promise.all(promises);
+async function scrubDir(
+  dir: string,
+  tags: TagNameToAction,
+  isDryRun: boolean,
+): Promise<void[]> {
+  const files = fs.readdirSync(dir);
+  const promises = files.map<Promise<any>>((name: string) => {
+    const filePath = path.join(dir, name);
+    const stat = fs.statSync(filePath);
+    if (stat.isFile()) {
+      return scrubFile(filePath, tags, isDryRun);
+    }
+    if (stat.isDirectory()) {
+      return scrubDir(filePath, tags, isDryRun);
+    }
+    return Promise.resolve();
+  });
+  return Promise.all(promises);
 }
 
 class Scrubber {
@@ -168,11 +170,11 @@ class Scrubber {
   async start(
     actions: ScrubberAction[],
     isDryRun: boolean = false,
-  ): Promise<void> {
+  ): Promise<void[][]> {
     const tags = { ...this.tags, ...scrubberActionsToDict(actions) };
 
     // TODO: specify file extensions?
-    await Promise.all(this.dirs.map((dir) => scrubDir(dir, tags, isDryRun)));
+    return Promise.all(this.dirs.map((dir) => scrubDir(dir, tags, isDryRun)));
   }
 }
 
