@@ -2,6 +2,7 @@ import boxen from "boxen";
 import chalk from "chalk";
 import figlet from "figlet";
 import inquirer from "inquirer";
+import shell from "shelljs";
 import yargs from "yargs/yargs";
 
 type CommandLineArgs = Array<string>;
@@ -12,6 +13,7 @@ type Options = {
   api?: string;
   database?: string;
   auth?: boolean;
+  output?: string;
   _?: (string | number)[];
   $0?: string;
 };
@@ -49,6 +51,12 @@ const OPTIONS = {
     description: "Include built-in auth features",
     message: "Would you like built-in auth features?",
   },
+  output: {
+    id: "o",
+    description: "Output directory",
+    message:
+      "Which directory would you like the starter code folder to be in (default is current directory)?",
+  },
 };
 
 const parseArguments = (args: CommandLineArgs) => {
@@ -75,6 +83,11 @@ const parseArguments = (args: CommandLineArgs) => {
       alias: OPTIONS.auth.id,
       type: "boolean",
       description: OPTIONS.auth.description,
+    },
+    output: {
+      alias: OPTIONS.output.id,
+      type: "string",
+      description: OPTIONS.output.description,
     },
   });
 
@@ -119,6 +132,15 @@ const promptOptions = async (options: Options) => {
     });
   }
 
+  if (!options.output) {
+    prompts.push({
+      type: "output",
+      name: "output",
+      message: OPTIONS.output.message,
+      default: ".",
+    });
+  }
+
   const answers = await inquirer.prompt(prompts);
 
   return {
@@ -126,6 +148,7 @@ const promptOptions = async (options: Options) => {
     api: options.api || answers.api,
     database: options.database || answers.database,
     auth: options.auth || answers.auth,
+    output: options.output || answers.output,
   };
 };
 
@@ -173,10 +196,22 @@ const cli = async (args: CommandLineArgs) => {
   let options: Options = parseArguments(args);
   options = await promptOptions(options);
   const confirm = await confirmPrompt(options);
-  if (confirm) {
-    console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
-  } else {
+  if (!confirm) {
     console.log(chalk.red.bold("Blueprint app creation has been cancelled."));
+    return;
+  }
+  console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
+  const path = options.output;
+  const changeDirectory = shell.cd(path);
+  if (changeDirectory.code !== 0) {
+    console.log("No directory exists. Exiting...");
+    return;
+  }
+  const clone = shell.exec(
+    "git clone https://github.com/uwblueprint/starter-code-v2.git",
+  );
+  if (clone.code !== 0) {
+    console.log("Git clone failed. Exiting...");
   }
 };
 
