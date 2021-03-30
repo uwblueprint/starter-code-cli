@@ -24,13 +24,13 @@ export function scrubberActionsToDict(
   return dict;
 }
 
-export async function scrubFile(
+export function scrubFile(
   filePath: string,
   tags: TagNameToAction,
   isDryRun: boolean,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs.readFile(filePath, { encoding: "utf8" }, async (err, text) => {
+    fs.readFile(filePath, { encoding: "utf8" }, (err, text) => {
       if (err) {
         reject(err);
       }
@@ -77,18 +77,22 @@ export async function scrubFile(
             const brace = tag === tokens[0] ? tokens[1] : tokens[0];
 
             if (brace === tokens[1] && brace !== TAG_START_CHAR) {
-              throw new Error(
-                `Malformed tag ${filePath}:line ${
-                  i + 1
-                }: expected '{' after tag name`,
+              reject(
+                new Error(
+                  `Malformed tag ${filePath}:line ${
+                    i + 1
+                  }: expected '{' after tag name`,
+                ),
               );
             }
 
             if (brace === tokens[0] && brace !== TAG_END_CHAR) {
-              throw new Error(
-                `Malformed tag ${filePath}:line ${
-                  i + 1
-                }: expected '}' before tag name`,
+              reject(
+                new Error(
+                  `Malformed tag ${filePath}:line ${
+                    i + 1
+                  }: expected '}' before tag name`,
+                ),
               );
             }
 
@@ -122,7 +126,7 @@ export async function scrubFile(
   });
 }
 
-export async function scrubDir(
+export function scrubDir(
   dir: string,
   tags: TagNameToAction,
   isDryRun: boolean,
@@ -140,4 +144,20 @@ export async function scrubDir(
     return Promise.resolve();
   });
   return Promise.all(promises);
+}
+
+export function removeFile(filePath: string): Promise<void> {
+  const stat = fs.statSync(filePath);
+  if (stat.isDirectory() || stat.isFile()) {
+    return new Promise((resolve, reject) =>
+      fs.rm(filePath, { recursive: true }, (err) => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      }),
+    );
+  }
+
+  return Promise.reject(new Error(`${filePath} is not a directory or file.`));
 }
