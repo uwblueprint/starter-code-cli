@@ -1,9 +1,28 @@
 {
-  "actions": [
-    {
-      "type": "keep",
-      "tags": ["@remove", "@remove2"]
+  "cliOptionsToActions": {
+    "typescript": {
+      "tagsToKeep": ["typescript"],
+      "filesToDelete": ["test_dir/python"]
+    },
+    "python": {
+      "tagsToKeep": ["python"],
+      "filesToDelete": ["typescript"]
+    },
+    "rest": {
+      "tagsToKeep": ["rest"]
+    },
+    "graphql": {
+      "tagsToKeep": ["graphql"]
+    },
+    "postgresql": {
+      "tagsToKeep": ["postgresql"]
+    },
+    "mongodb": {
+      "tagsToKeep": ["mongodb"]
+    },
+    "auth": {
+      "tagsToKeep": ["auth"]
     }
-  ],
+  },
   "dirs": ["test_dir"]
 }

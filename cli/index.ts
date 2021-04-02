@@ -3,20 +3,36 @@ import chalk from "chalk";
 import figlet from "figlet";
 import inquirer from "inquirer";
 import yargs from "yargs/yargs";
+import {
+  Options,
+  CommandLineOptions,
+  APIType,
+  BackendType,
+  DatabaseType,
+} from "./optionTypes";
 
 type CommandLineArgs = Array<string>;
 
-type Options = {
-  [x: string]: unknown;
-  backend?: string;
-  api?: string;
-  database?: string;
-  auth?: boolean;
-  _?: (string | number)[];
-  $0?: string;
+type Choice<T> = {
+  name: string;
+  value: T;
 };
 
-const OPTIONS = {
+type OptionConfig<T> = {
+  id: string;
+  description: string;
+  message: string;
+  choices: ReadonlyArray<Choice<T>>;
+};
+
+type OptionConfigs = {
+  backend: OptionConfig<BackendType>;
+  api: OptionConfig<APIType>;
+  database: OptionConfig<DatabaseType>;
+  auth: OptionConfig<void>;
+};
+
+const OPTIONS: OptionConfigs = {
   backend: {
     id: "b",
     description: "Backend language",
@@ -48,10 +64,11 @@ const OPTIONS = {
     id: "au",
     description: "Include built-in auth features",
     message: "Would you like built-in auth features?",
+    choices: [],
   },
 };
 
-const parseArguments = (args: CommandLineArgs) => {
+const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
   const { argv } = yargs(args.slice(2)).options({
     backend: {
       alias: OPTIONS.backend.id,
@@ -78,10 +95,15 @@ const parseArguments = (args: CommandLineArgs) => {
     },
   });
 
-  return argv;
+  return {
+    backend: argv.backend as BackendType,
+    api: argv.backend as APIType,
+    database: argv.database as DatabaseType,
+    auth: argv.auth,
+  };
 };
 
-const promptOptions = async (options: Options) => {
+const promptOptions = async (options: CommandLineOptions) => {
   const prompts = [];
   if (!options.backend) {
     prompts.push({
@@ -133,9 +155,11 @@ const confirmPrompt = async (options: Options) => {
   const backendName = OPTIONS.backend.choices.find(
     (choice) => choice.value === options.backend,
   )?.name;
+
   const apiName = OPTIONS.api.choices.find(
     (choice) => choice.value === options.api,
   )?.name;
+
   const databaseName = OPTIONS.database.choices.find(
     (choice) => choice.value === options.database,
   )?.name;
@@ -156,7 +180,7 @@ const confirmPrompt = async (options: Options) => {
   return confirm;
 };
 
-const cli = async (args: CommandLineArgs) => {
+const cli = async (args: CommandLineArgs): Promise<Options> => {
   console.log(
     boxen(
       chalk.bold(
@@ -170,14 +194,15 @@ const cli = async (args: CommandLineArgs) => {
       },
     ),
   );
-  let options: Options = parseArguments(args);
-  options = await promptOptions(options);
+  const commandLineOptions: CommandLineOptions = parseArguments(args);
+  const options: Options = await promptOptions(commandLineOptions);
   const confirm = await confirmPrompt(options);
   if (confirm) {
     console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
   } else {
     console.log(chalk.red.bold("Blueprint app creation has been cancelled."));
   }
+  return options;
 };
 
 export default cli;

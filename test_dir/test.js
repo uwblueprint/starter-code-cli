@@ -1,5 +1,5 @@
-// @remove {
+// typescript {
 console.log("this should be gone");
-// } @remove
+// } typescript
 
 console.log("hello world");
