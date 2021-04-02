@@ -1,10 +1,7 @@
 import fs from "fs";
-import {
-  ScrubberAction,
-  TagNameToAction,
-  ScrubberConfig,
-} from "./scrubberTypes";
-import { scrubberActionsToDict, scrubDir } from "./scrubUtils";
+import { Options } from "../cli/optionTypes";
+import { ScrubberConfig, TagNameToAction, CLIOption } from "./scrubberTypes";
+import { getAllTags, scrubDir, removeFile } from "./scrubUtils";
 
 async function getConfigFile(filename: string): Promise<ScrubberConfig> {
   try {
@@ -19,24 +16,55 @@ async function getConfigFile(filename: string): Promise<ScrubberConfig> {
 class Scrubber {
   tags: TagNameToAction = {};
 
-  dirs: string[] = [];
+  config?: ScrubberConfig;
 
-  async parseConfig(filename: string): Promise<void> {
+  async parseConfig(filename: string) {
     // TODO validate config (e.g.properly formed tag names)
-    const config = await getConfigFile(filename);
-    this.tags = scrubberActionsToDict(config.actions);
-    this.dirs = config.dirs;
+    this.config = await getConfigFile(filename);
+    this.tags = getAllTags(this.config.cliOptionsToActions);
   }
 
   // Scrub files
-  async start(
-    actions: ScrubberAction[],
-    isDryRun: boolean = false,
-  ): Promise<void[][]> {
-    const tags = { ...this.tags, ...scrubberActionsToDict(actions) };
+  async start(options: Options, isDryRun: boolean = false): Promise<void[][]> {
+    if (!this.config) throw new Error("Missing config.");
+
+    const tags = { ...this.tags };
+    const filesToDelete = new Set<string>();
+
+    Object.values(options).forEach((val) => {
+      if (!this.config) return;
+
+      let option: CLIOption;
+
+      if (typeof val === "boolean") {
+        if (!val) return;
+        option = "auth";
+      } else {
+        option = val;
+      }
+
+      const action = this.config.cliOptionsToActions[option];
+
+      action.filesToDelete?.forEach((filename: string) => {
+        filesToDelete.add(filename);
+      });
+
+      action.tagsToKeep?.forEach((tag) => {
+        tags[tag] = "keep";
+      });
+    });
+
+    const removeFilePromises = Array.from(
+      filesToDelete,
+    ).map((filePath: string) => removeFile(filePath));
+    const scrubDirPromise = this.config.dirs.map((dir) =>
+      scrubDir(dir, tags, isDryRun),
+    );
 
     // TODO: specify file extensions?
-    return Promise.all(this.dirs.map((dir) => scrubDir(dir, tags, isDryRun)));
+    return Promise.all(
+      (<Promise<any>[]>removeFilePromises).concat(scrubDirPromise),
+    );
   }
 }
 

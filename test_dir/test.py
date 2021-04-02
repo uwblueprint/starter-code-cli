@@ -1,5 +1,9 @@
-# @remove {
+# python {
     print('this should be gone')
-# } @remove
+# } python
 
-print('hello world')
+print('hello world')e
+
+# auth {
+    print("auth features here")
+# } auth

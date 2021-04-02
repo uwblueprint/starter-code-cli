@@ -1,5 +1,9 @@
-@remove {
-    this should be gone
-} @remove
+mongodb {
+    this should be deleted
+} mongodb
 
 hello world
+
+postgresql {
+    this is postgresql
+} postgresql

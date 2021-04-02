@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { ScrubberAction, TagNameToAction } from "./scrubberTypes";
+import { TagNameToAction, CLIOptionActions } from "./scrubberTypes";
 
 const TAG_START_CHAR = "{";
 const TAG_END_CHAR = "}";
@@ -12,16 +12,14 @@ const FILE_TYPE_COMMENT: { [key: string]: string } = {
   py: "#",
 };
 
-export function scrubberActionsToDict(
-  actions: ScrubberAction[],
-): TagNameToAction {
-  const dict: TagNameToAction = {};
-  actions.forEach((action) => {
-    action.tags.forEach((tag: string) => {
-      dict[tag] = action.type;
+export function getAllTags(cliOptions: CLIOptionActions): TagNameToAction {
+  const tags: TagNameToAction = {};
+  Object.values(cliOptions).forEach((option) => {
+    option.tagsToKeep?.forEach((tag) => {
+      tags[tag] = "remove";
     });
   });
-  return dict;
+  return tags;
 }
 
 export function scrubFile(
@@ -148,9 +146,20 @@ export function scrubDir(
 
 export function removeFile(filePath: string): Promise<void> {
   const stat = fs.statSync(filePath);
-  if (stat.isDirectory() || stat.isFile()) {
+  if (stat.isDirectory()) {
     return new Promise((resolve, reject) =>
-      fs.rm(filePath, { recursive: true }, (err) => {
+      fs.rmdir(filePath, { recursive: true }, (err) => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      }),
+    );
+  }
+
+  if (stat.isFile()) {
+    return new Promise((resolve, reject) =>
+      fs.unlink(filePath, (err) => {
         if (err) {
           reject(err);
         }
