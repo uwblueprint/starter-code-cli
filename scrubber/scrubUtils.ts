@@ -12,7 +12,9 @@ const FILE_TYPE_COMMENT: { [key: string]: string } = {
   py: "#",
 };
 
-export function getAllTags(cliOptions: CLIOptionActions): TagNameToAction {
+export function getAllTagsAndSetToRemove(
+  cliOptions: CLIOptionActions,
+): TagNameToAction {
   const tags: TagNameToAction = {};
   Object.values(cliOptions).forEach((option) => {
     option.tagsToKeep?.forEach((tag) => {

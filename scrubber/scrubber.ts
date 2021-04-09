@@ -1,7 +1,7 @@
 import fs from "fs";
 import { Options } from "../cli/optionTypes";
-import { ScrubberConfig, TagNameToAction, CLIOption } from "./scrubberTypes";
-import { getAllTags, scrubDir, removeFile } from "./scrubUtils";
+import { ScrubberConfig, TagNameToAction } from "./scrubberTypes";
+import { getAllTagsAndSetToRemove, scrubDir, removeFile } from "./scrubUtils";
 
 async function getConfigFile(filename: string): Promise<ScrubberConfig> {
   try {
@@ -21,7 +21,7 @@ class Scrubber {
   async parseConfig(filename: string) {
     // TODO validate config (e.g.properly formed tag names)
     this.config = await getConfigFile(filename);
-    this.tags = getAllTags(this.config.cliOptionsToActions);
+    this.tags = getAllTagsAndSetToRemove(this.config.cliOptionsToActions);
   }
 
   // Scrub files
@@ -32,18 +32,9 @@ class Scrubber {
     const filesToDelete = new Set<string>();
 
     Object.values(options).forEach((val) => {
-      if (!this.config) return;
+      if (!this.config || !val) return;
 
-      let option: CLIOption;
-
-      if (typeof val === "boolean") {
-        if (!val) return;
-        option = "auth";
-      } else {
-        option = val;
-      }
-
-      const action = this.config.cliOptionsToActions[option];
+      const action = this.config.cliOptionsToActions[val];
 
       action.filesToDelete?.forEach((filename: string) => {
         filesToDelete.add(filename);
