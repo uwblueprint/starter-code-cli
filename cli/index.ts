@@ -9,6 +9,7 @@ import {
   APIType,
   BackendType,
   DatabaseType,
+  AuthType,
 } from "./optionTypes";
 
 type CommandLineArgs = Array<string>;
@@ -97,7 +98,7 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
 
   return {
     backend: argv.backend as BackendType,
-    api: argv.backend as APIType,
+    api: argv.api as APIType,
     database: argv.database as DatabaseType,
     auth: argv.auth,
   };
@@ -147,7 +148,7 @@ const promptOptions = async (options: CommandLineOptions) => {
     backend: options.backend || answers.backend,
     api: options.api || answers.api,
     database: options.database || answers.database,
-    auth: options.auth || answers.auth,
+    auth: (options.auth || answers.auth ? "auth" : null) as AuthType,
   };
 };
 
