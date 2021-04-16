@@ -18,4 +18,10 @@ export type CommandLineOptions = {
   api?: APIType;
   database?: DatabaseType;
   auth?: boolean;
+  outputDir?: string;
+};
+
+export type UserResponse = {
+  appOptions: Options;
+  outputDir: string;
 };

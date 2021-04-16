@@ -17,7 +17,9 @@ async function scrub(options: Options) {
 
 async function run() {
   const options = await cli(process.argv);
-  scrub(options);
+  if (options) {
+    scrub(options);
+  }
 }
 
 run();

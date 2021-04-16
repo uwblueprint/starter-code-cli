@@ -31,6 +31,7 @@ class Scrubber {
     const tags = { ...this.tags };
     const filesToDelete = new Set<string>();
 
+    // Set the tags to keep and which files to delete based on selected technologies.
     Object.values(options).forEach((val) => {
       if (!this.config || !val) return;
 
@@ -40,7 +41,7 @@ class Scrubber {
         filesToDelete.add(filename);
       });
 
-      action.tagsToKeep?.forEach((tag) => {
+      action.tagsToKeep?.forEach((tag: string) => {
         tags[tag] = "keep";
       });
     });
