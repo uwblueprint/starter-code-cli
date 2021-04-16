@@ -105,7 +105,7 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
 };
 
 const promptOptions = async (options: CommandLineOptions) => {
-  const prompts = [];
+  let prompts = [];
   if (!options.backend) {
     prompts.push({
       type: "list",
@@ -115,12 +115,20 @@ const promptOptions = async (options: CommandLineOptions) => {
     });
   }
 
+  let answers = await inquirer.prompt(prompts);
+  prompts = [];
+
+  const backend = options.backend || answers.backend;
+  const restChoice = OPTIONS.api.choices.find(
+    (choice) => choice.value === "rest",
+  );
+
   if (!options.api) {
     prompts.push({
       type: "list",
       name: "api",
       message: OPTIONS.api.message,
-      choices: OPTIONS.api.choices,
+      choices: backend === "typescript" ? OPTIONS.api.choices : [restChoice],
     });
   }
 
@@ -142,10 +150,10 @@ const promptOptions = async (options: CommandLineOptions) => {
     });
   }
 
-  const answers = await inquirer.prompt(prompts);
+  answers = await inquirer.prompt(prompts);
 
   return {
-    backend: options.backend || answers.backend,
+    backend,
     api: options.api || answers.api,
     database: options.database || answers.database,
     auth: (options.auth || answers.auth ? "auth" : null) as AuthType,
@@ -197,11 +205,18 @@ const cli = async (args: CommandLineArgs): Promise<Options> => {
   );
   const commandLineOptions: CommandLineOptions = parseArguments(args);
   const options: Options = await promptOptions(commandLineOptions);
+  if (options.backend === "python" && options.api === "graphql") {
+    return Promise.reject(
+      chalk.red.bold("Sorry, we currently do not support Python and GraphQL."),
+    );
+  }
   const confirm = await confirmPrompt(options);
   if (confirm) {
     console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
   } else {
-    console.log(chalk.red.bold("Blueprint app creation has been cancelled."));
+    return Promise.reject(
+      chalk.red.bold("Blueprint app creation has been cancelled."),
+    );
   }
   return options;
 };
