@@ -295,6 +295,13 @@ async function cli(args: CommandLineArgs): Promise<Options> {
     return Promise.reject(new Error("Git clone failed. Exiting..."));
   }
 
+  console.log(chalk.green.bold("Removing .git ..."));
+  const removeGit = shell.exec("rm -rf starter-code-v2/.git");
+
+  if (removeGit.code !== 0) {
+    return Promise.reject(new Error("Remove .git failed. Exiting..."));
+  }
+
   return appOptions;
 }
 
