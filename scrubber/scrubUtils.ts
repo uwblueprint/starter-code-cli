@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import chalk from "chalk";
 import { TagNameToAction, CLIOptionActions } from "./scrubberTypes";
 
 const TAG_START_CHAR = "{";
@@ -64,9 +65,11 @@ export function scrubFile(
         if (tryProcessTag) {
           if (tokens[0] in tags && tokens.length !== 2) {
             console.warn(
-              `WARNING line ${
-                i + 1
-              }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+              chalk.yellowBright.bold(
+                `WARNING line ${
+                  i + 1
+                }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+              ),
             );
             scrubbedLines.push(line);
             continue;
@@ -128,25 +131,42 @@ export function scrubFile(
 
 export function scrubDir(
   dir: string,
+  ignoreFiles: Set<string>,
   tags: TagNameToAction,
   isDryRun: boolean,
 ): Promise<void[]> {
   const files = fs.readdirSync(dir);
+
   const promises = files.map<Promise<any>>((name: string) => {
     const filePath = path.join(dir, name);
     const stat = fs.statSync(filePath);
-    if (stat.isFile()) {
+
+    if (stat.isFile() && !ignoreFiles.has(name)) {
       return scrubFile(filePath, tags, isDryRun);
     }
-    if (stat.isDirectory()) {
-      return scrubDir(filePath, tags, isDryRun);
+
+    if (stat.isDirectory() && !ignoreFiles.has(name)) {
+      return scrubDir(filePath, ignoreFiles, tags, isDryRun);
     }
+
     return Promise.resolve();
   });
+
   return Promise.all(promises);
 }
 
-export function removeFile(filePath: string): Promise<void> {
+export function removeFileOrDir(filePath: string): Promise<void> {
+  const exists = fs.existsSync(filePath);
+
+  if (!exists) {
+    console.warn(
+      chalk.yellowBright.bold(
+        `Attempted to remove ${filePath}, but ${filePath} was not found in the current directory`,
+      ),
+    );
+    return Promise.resolve();
+  }
+
   const stat = fs.statSync(filePath);
   if (stat.isDirectory()) {
     return new Promise((resolve, reject) =>
@@ -170,5 +190,11 @@ export function removeFile(filePath: string): Promise<void> {
     );
   }
 
-  return Promise.reject(new Error(`${filePath} is not a directory or file.`));
+  console.warn(
+    chalk.yellowBright.bold(
+      `Attempted to remove ${filePath}, but ${filePath} is not a directory or file.`,
+    ),
+  );
+
+  return Promise.resolve();
 }

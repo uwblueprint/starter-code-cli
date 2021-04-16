@@ -22,7 +22,8 @@ export type CLIOptionActions = {
 
 export type ScrubberConfig = {
   cliOptionsToActions: CLIOptionActions;
-  dirs: string[];
+  dir: string; // Directories to operate on (relative path).
+  ignore: string[]; // Directory and file names to ignore.
 };
 
 export type TagNameToAction = { [key: string]: ScrubberActionType };

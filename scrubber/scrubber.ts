@@ -1,14 +1,20 @@
+import chalk from "chalk";
 import fs from "fs";
+import glob from "glob";
 import { Options } from "../cli/optionTypes";
 import { ScrubberConfig, TagNameToAction } from "./scrubberTypes";
-import { getAllTagsAndSetToRemove, scrubDir, removeFile } from "./scrubUtils";
+import {
+  getAllTagsAndSetToRemove,
+  scrubDir,
+  removeFileOrDir,
+} from "./scrubUtils";
 
 async function getConfigFile(filename: string): Promise<ScrubberConfig> {
   try {
     const configString = await fs.readFileSync(filename, "utf8");
     return JSON.parse(configString);
   } catch (err) {
-    console.error("Failed to read file ", filename);
+    console.error(chalk.red.bold("Failed to read file ", filename));
     throw err;
   }
 }
@@ -25,11 +31,20 @@ class Scrubber {
   }
 
   // Scrub files
-  async start(options: Options, isDryRun: boolean = false): Promise<void[][]> {
+  async start(options: Options, isDryRun: boolean = false): Promise<any> {
     if (!this.config) throw new Error("Missing config.");
+
+    // Directory to scrub.
+    const dirToScrubPath = `${process.cwd()}/${this.config?.dir}`;
 
     const tags = { ...this.tags };
     const filesToDelete = new Set<string>();
+
+    const ignoreFiles = new Set<string>();
+
+    this.config.ignore.forEach((filename) => {
+      ignoreFiles.add(filename);
+    });
 
     // Set the tags to keep and which files to delete based on selected technologies.
     Object.values(options).forEach((val) => {
@@ -37,8 +52,13 @@ class Scrubber {
 
       const action = this.config.cliOptionsToActions[val];
 
-      action.filesToDelete?.forEach((filename: string) => {
-        filesToDelete.add(filename);
+      action.filesToDelete?.forEach((globPattern: string) => {
+        glob
+          .sync(globPattern, { dot: false, cwd: dirToScrubPath })
+          .forEach((filename: string) => {
+            if (ignoreFiles.has(filename)) return;
+            filesToDelete.add(`${dirToScrubPath}/${filename}`);
+          });
       });
 
       action.tagsToKeep?.forEach((tag: string) => {
@@ -48,15 +68,19 @@ class Scrubber {
 
     const removeFilePromises = Array.from(
       filesToDelete,
-    ).map((filePath: string) => removeFile(filePath));
-    const scrubDirPromise = this.config.dirs.map((dir) =>
-      scrubDir(dir, tags, isDryRun),
+    ).map((filePath: string) => removeFileOrDir(filePath));
+
+    const scrubDirPromise = scrubDir(
+      this.config.dir,
+      ignoreFiles,
+      tags,
+      isDryRun,
     );
 
-    // TODO: specify file extensions?
-    return Promise.all(
-      (<Promise<any>[]>removeFilePromises).concat(scrubDirPromise),
-    );
+    // Remove files first, then scrub.
+    return Promise.all(removeFilePromises)
+      .then(() => scrubDirPromise)
+      .catch((err) => Promise.reject(err));
   }
 }
 

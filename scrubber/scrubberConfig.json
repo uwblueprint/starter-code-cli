@@ -2,11 +2,11 @@
   "cliOptionsToActions": {
     "typescript": {
       "tagsToKeep": ["typescript"],
-      "filesToDelete": ["test_dir/python"]
+      "filesToDelete": ["python/"]
     },
     "python": {
       "tagsToKeep": ["python"],
-      "filesToDelete": ["typescript"]
+      "filesToDelete": ["typescript/"]
     },
     "rest": {
       "tagsToKeep": ["rest"]
@@ -24,5 +24,6 @@
       "tagsToKeep": ["auth"]
     }
   },
-  "dirs": ["test_dir"]
+  "dir": "starter-code-v2",
+  "ignore": ["node_modules", ".git", "yarn.lock"]
 }
