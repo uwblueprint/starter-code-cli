@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { ScrubberAction, TagNameToAction } from "./scrubberTypes";
+import chalk from "chalk";
+import { TagNameToAction, CLIOptionActions } from "./scrubberTypes";
 
 const TAG_START_CHAR = "{";
 const TAG_END_CHAR = "}";
@@ -12,16 +13,16 @@ const FILE_TYPE_COMMENT: { [key: string]: string } = {
   py: "#",
 };
 
-export function scrubberActionsToDict(
-  actions: ScrubberAction[],
+export function getAllTagsAndSetToRemove(
+  cliOptions: CLIOptionActions,
 ): TagNameToAction {
-  const dict: TagNameToAction = {};
-  actions.forEach((action) => {
-    action.tags.forEach((tag: string) => {
-      dict[tag] = action.type;
+  const tags: TagNameToAction = {};
+  Object.values(cliOptions).forEach((option) => {
+    option.tagsToKeep?.forEach((tag) => {
+      tags[tag] = "remove";
     });
   });
-  return dict;
+  return tags;
 }
 
 export function scrubFile(
@@ -64,9 +65,11 @@ export function scrubFile(
         if (tryProcessTag) {
           if (tokens[0] in tags && tokens.length !== 2) {
             console.warn(
-              `WARNING line ${
-                i + 1
-              }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+              chalk.yellowBright.bold(
+                `WARNING line ${
+                  i + 1
+                }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+              ),
             );
             scrubbedLines.push(line);
             continue;
@@ -128,29 +131,46 @@ export function scrubFile(
 
 export function scrubDir(
   dir: string,
+  ignoreFiles: Set<string>,
   tags: TagNameToAction,
   isDryRun: boolean,
 ): Promise<void[]> {
   const files = fs.readdirSync(dir);
+
   const promises = files.map<Promise<any>>((name: string) => {
     const filePath = path.join(dir, name);
     const stat = fs.statSync(filePath);
-    if (stat.isFile()) {
+
+    if (stat.isFile() && !ignoreFiles.has(name)) {
       return scrubFile(filePath, tags, isDryRun);
     }
-    if (stat.isDirectory()) {
-      return scrubDir(filePath, tags, isDryRun);
+
+    if (stat.isDirectory() && !ignoreFiles.has(name)) {
+      return scrubDir(filePath, ignoreFiles, tags, isDryRun);
     }
+
     return Promise.resolve();
   });
+
   return Promise.all(promises);
 }
 
-export function removeFile(filePath: string): Promise<void> {
+export function removeFileOrDir(filePath: string): Promise<void> {
+  const exists = fs.existsSync(filePath);
+
+  if (!exists) {
+    console.warn(
+      chalk.yellowBright.bold(
+        `Attempted to remove ${filePath}, but ${filePath} was not found in the current directory`,
+      ),
+    );
+    return Promise.resolve();
+  }
+
   const stat = fs.statSync(filePath);
-  if (stat.isDirectory() || stat.isFile()) {
+  if (stat.isDirectory()) {
     return new Promise((resolve, reject) =>
-      fs.rm(filePath, { recursive: true }, (err) => {
+      fs.rmdir(filePath, { recursive: true }, (err) => {
         if (err) {
           reject(err);
         }
@@ -159,5 +179,22 @@ export function removeFile(filePath: string): Promise<void> {
     );
   }
 
-  return Promise.reject(new Error(`${filePath} is not a directory or file.`));
+  if (stat.isFile()) {
+    return new Promise((resolve, reject) =>
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      }),
+    );
+  }
+
+  console.warn(
+    chalk.yellowBright.bold(
+      `Attempted to remove ${filePath}, but ${filePath} is not a directory or file.`,
+    ),
+  );
+
+  return Promise.resolve();
 }

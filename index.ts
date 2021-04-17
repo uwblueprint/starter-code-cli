@@ -1,20 +1,26 @@
 #!/usr/bin/env node
 import cli from "./cli";
+import { Options } from "./cli/optionTypes";
 
 import Scrubber from "./scrubber/scrubber";
-import { ScrubberAction } from "./scrubber/scrubberTypes";
 
-async function scrub() {
+async function scrub(rootDir: string, options: Options) {
   try {
-    const actions: ScrubberAction[] = [{ type: "remove", tags: ["@remove"] }];
     const scrubber = new Scrubber();
 
-    await scrubber.parseConfig("scrubber/scrubberConfig.json");
-    await scrubber.start(actions);
+    await scrubber.parseConfig(`${rootDir}/scrubber/scrubberConfig.json`);
+    await scrubber.start(options);
   } catch (err) {
     console.log(err);
   }
 }
 
-cli(process.argv);
-scrub();
+async function run() {
+  const rootDir = __dirname;
+  const options = await cli(process.argv);
+  if (options) {
+    await scrub(rootDir, options);
+  }
+}
+
+run();

@@ -4,21 +4,39 @@ import figlet from "figlet";
 import inquirer from "inquirer";
 import shell from "shelljs";
 import yargs from "yargs/yargs";
+import {
+  Options,
+  CommandLineOptions,
+  UserResponse,
+  APIType,
+  BackendType,
+  DatabaseType,
+  AuthType,
+} from "./optionTypes";
 
 type CommandLineArgs = Array<string>;
 
-type Options = {
-  [x: string]: unknown;
-  backend?: string;
-  api?: string;
-  database?: string;
-  auth?: boolean;
-  output?: string;
-  _?: (string | number)[];
-  $0?: string;
+type Choice<T> = {
+  name: string;
+  value: T;
 };
 
-const OPTIONS = {
+type OptionConfig<T> = {
+  id: string;
+  description: string;
+  message: string;
+  choices: ReadonlyArray<Choice<T>>;
+};
+
+type OptionConfigs = {
+  backend: OptionConfig<BackendType>;
+  api: OptionConfig<APIType>;
+  database: OptionConfig<DatabaseType>;
+  auth: OptionConfig<void>;
+  outputDir: OptionConfig<void>;
+};
+
+const OPTIONS: OptionConfigs = {
   backend: {
     id: "b",
     description: "Backend language",
@@ -50,16 +68,18 @@ const OPTIONS = {
     id: "au",
     description: "Include built-in auth features",
     message: "Would you like built-in auth features?",
+    choices: [],
   },
-  output: {
+  outputDir: {
     id: "o",
     description: "Output directory",
     message:
       "Which directory would you like the starter code folder to be in (default is current directory)?",
+    choices: [],
   },
 };
 
-const parseArguments = (args: CommandLineArgs) => {
+const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
   const { argv } = yargs(args.slice(2)).options({
     backend: {
       alias: OPTIONS.backend.id,
@@ -84,17 +104,24 @@ const parseArguments = (args: CommandLineArgs) => {
       type: "boolean",
       description: OPTIONS.auth.description,
     },
-    output: {
-      alias: OPTIONS.output.id,
+    outputDir: {
+      alias: OPTIONS.outputDir.id,
       type: "string",
-      description: OPTIONS.output.description,
+      description: OPTIONS.outputDir.description,
     },
   });
 
-  return argv;
+  return {
+    backend: argv.backend as BackendType,
+    api: argv.api as APIType,
+    database: argv.database as DatabaseType,
+    auth: argv.auth,
+  };
 };
 
-const promptOptions = async (options: Options) => {
+const promptOptions = async (
+  options: CommandLineOptions,
+): Promise<UserResponse> => {
   const prompts = [];
   if (!options.backend) {
     prompts.push({
@@ -132,11 +159,11 @@ const promptOptions = async (options: Options) => {
     });
   }
 
-  if (!options.output) {
+  if (!options.outputDir) {
     prompts.push({
       type: "output",
-      name: "output",
-      message: OPTIONS.output.message,
+      name: "outputDir",
+      message: OPTIONS.outputDir.message,
       default: ".",
     });
   }
@@ -144,11 +171,13 @@ const promptOptions = async (options: Options) => {
   const answers = await inquirer.prompt(prompts);
 
   return {
-    backend: options.backend || answers.backend,
-    api: options.api || answers.api,
-    database: options.database || answers.database,
-    auth: options.auth || answers.auth,
-    output: options.output || answers.output,
+    appOptions: {
+      backend: options.backend || answers.backend,
+      api: options.api || answers.api,
+      database: options.database || answers.database,
+      auth: (options.auth || answers.auth ? "auth" : null) as AuthType,
+    },
+    outputDir: options.outputDir || answers.outputDir,
   };
 };
 
@@ -156,9 +185,11 @@ const confirmPrompt = async (options: Options) => {
   const backendName = OPTIONS.backend.choices.find(
     (choice) => choice.value === options.backend,
   )?.name;
+
   const apiName = OPTIONS.api.choices.find(
     (choice) => choice.value === options.api,
   )?.name;
+
   const databaseName = OPTIONS.database.choices.find(
     (choice) => choice.value === options.database,
   )?.name;
@@ -179,7 +210,7 @@ const confirmPrompt = async (options: Options) => {
   return confirm;
 };
 
-const cli = async (args: CommandLineArgs) => {
+async function cli(args: CommandLineArgs): Promise<Options | null> {
   console.log(
     boxen(
       chalk.bold(
@@ -193,26 +224,37 @@ const cli = async (args: CommandLineArgs) => {
       },
     ),
   );
-  let options: Options = parseArguments(args);
-  options = await promptOptions(options);
-  const confirm = await confirmPrompt(options);
+
+  const commandLineOptions: CommandLineOptions = parseArguments(args);
+
+  const { appOptions, outputDir } = await promptOptions(commandLineOptions);
+
+  const confirm = await confirmPrompt(appOptions);
+
   if (!confirm) {
     console.log(chalk.red.bold("Blueprint app creation has been cancelled."));
-    return;
+    return null;
   }
+
   console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
-  const path = options.output;
+
+  const path = outputDir;
   const changeDirectory = shell.cd(path);
+
   if (changeDirectory.code !== 0) {
     console.log("No directory exists. Exiting...");
-    return;
+    return null;
   }
+
   const clone = shell.exec(
     "git clone https://github.com/uwblueprint/starter-code-v2.git",
   );
+
   if (clone.code !== 0) {
     console.log("Git clone failed. Exiting...");
   }
-};
+
+  return appOptions;
+}
 
 export default cli;
