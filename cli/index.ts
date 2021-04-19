@@ -1,3 +1,4 @@
+/* eslint-disable prefer-promise-reject-errors */
 import boxen from "boxen";
 import chalk from "chalk";
 import figlet from "figlet";
@@ -122,7 +123,7 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
 const promptOptions = async (
   options: CommandLineOptions,
 ): Promise<UserResponse> => {
-  const prompts = [];
+  let prompts = [];
   if (!options.backend) {
     prompts.push({
       type: "list",
@@ -132,12 +133,20 @@ const promptOptions = async (
     });
   }
 
+  let answers = await inquirer.prompt(prompts);
+  prompts = [];
+
+  const backend = options.backend || answers.backend;
+  const restChoice = OPTIONS.api.choices.find(
+    (choice) => choice.value === "rest",
+  );
+
   if (!options.api) {
     prompts.push({
       type: "list",
       name: "api",
       message: OPTIONS.api.message,
-      choices: OPTIONS.api.choices,
+      choices: backend === "typescript" ? OPTIONS.api.choices : [restChoice],
     });
   }
 
@@ -168,11 +177,11 @@ const promptOptions = async (
     });
   }
 
-  const answers = await inquirer.prompt(prompts);
+  answers = await inquirer.prompt(prompts);
 
   return {
     appOptions: {
-      backend: options.backend || answers.backend,
+      backend,
       api: options.api || answers.api,
       database: options.database || answers.database,
       auth: (options.auth || answers.auth ? "auth" : null) as AuthType,
@@ -210,7 +219,7 @@ const confirmPrompt = async (options: Options) => {
   return confirm;
 };
 
-async function cli(args: CommandLineArgs): Promise<Options | null> {
+async function cli(args: CommandLineArgs): Promise<Options> {
   console.log(
     boxen(
       chalk.bold(
@@ -229,11 +238,18 @@ async function cli(args: CommandLineArgs): Promise<Options | null> {
 
   const { appOptions, outputDir } = await promptOptions(commandLineOptions);
 
+  if (appOptions.backend === "python" && appOptions.api === "graphql") {
+    return Promise.reject(
+      chalk.red.bold("Sorry, we currently do not support Python and GraphQL."),
+    );
+  }
+
   const confirm = await confirmPrompt(appOptions);
 
   if (!confirm) {
-    console.log(chalk.red.bold("Blueprint app creation has been cancelled."));
-    return null;
+    return Promise.reject(
+      chalk.red.bold("Blueprint app creation has been cancelled."),
+    );
   }
 
   console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
@@ -242,8 +258,7 @@ async function cli(args: CommandLineArgs): Promise<Options | null> {
   const changeDirectory = shell.cd(path);
 
   if (changeDirectory.code !== 0) {
-    console.log("No directory exists. Exiting...");
-    return null;
+    return Promise.reject(chalk.red.bold("No directory exists. Exiting..."));
   }
 
   const clone = shell.exec(
@@ -251,7 +266,7 @@ async function cli(args: CommandLineArgs): Promise<Options | null> {
   );
 
   if (clone.code !== 0) {
-    console.log("Git clone failed. Exiting...");
+    return Promise.reject(chalk.red.bold("Git clone failed. Exiting..."));
   }
 
   return appOptions;

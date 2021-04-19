@@ -17,9 +17,11 @@ async function scrub(rootDir: string, options: Options) {
 
 async function run() {
   const rootDir = __dirname;
-  const options = await cli(process.argv);
-  if (options) {
+  try {
+    const options = await cli(process.argv);
     await scrub(rootDir, options);
+  } catch (err) {
+    console.log(err);
   }
 }
 
