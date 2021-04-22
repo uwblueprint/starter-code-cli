@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import chalk from "chalk";
 import cli from "./cli";
 import { Options } from "./cli/optionTypes";
 
@@ -21,7 +22,7 @@ async function run() {
     const options = await cli(process.argv);
     await scrub(rootDir, options);
   } catch (err) {
-    console.log(err);
+    console.log(chalk.red.bold(err.message));
   }
 }
 

@@ -1,4 +1,3 @@
-/* eslint-disable prefer-promise-reject-errors */
 import boxen from "boxen";
 import chalk from "chalk";
 import figlet from "figlet";
@@ -80,6 +79,33 @@ const OPTIONS: OptionConfigs = {
   },
 };
 
+const OPTION_COMBINATION_DENY_LIST = [
+  [
+    { optionType: "backend", value: "python" },
+    { optionType: "api", value: "graphql" },
+  ],
+];
+
+const validateCommandLineOptions = (
+  commandLineOptions: CommandLineOptions,
+): void => {
+  OPTION_COMBINATION_DENY_LIST.forEach((combination) => {
+    if (
+      combination.every(
+        (option) =>
+          commandLineOptions[option.optionType as keyof CommandLineOptions] ===
+          option.value,
+      )
+    ) {
+      const formattedCombination = combination.map((c) => c.value).join(", ");
+      // TODO: custom error type would be a nice-to-have
+      throw new Error(
+        `Sorry, we currently do not support the following combination: ${formattedCombination}`,
+      );
+    }
+  });
+};
+
 const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
   const { argv } = yargs(args.slice(2)).options({
     backend: {
@@ -124,12 +150,16 @@ const promptOptions = async (
   options: CommandLineOptions,
 ): Promise<UserResponse> => {
   let prompts = [];
+  const tsChoice = OPTIONS.backend.choices.find(
+    (choice) => choice.value === "typescript",
+  );
+
   if (!options.backend) {
     prompts.push({
       type: "list",
       name: "backend",
       message: OPTIONS.backend.message,
-      choices: OPTIONS.backend.choices,
+      choices: options.api === "graphql" ? [tsChoice] : OPTIONS.backend.choices,
     });
   }
 
@@ -146,7 +176,7 @@ const promptOptions = async (
       type: "list",
       name: "api",
       message: OPTIONS.api.message,
-      choices: backend === "typescript" ? OPTIONS.api.choices : [restChoice],
+      choices: backend === "python" ? [restChoice] : OPTIONS.api.choices,
     });
   }
 
@@ -236,19 +266,15 @@ async function cli(args: CommandLineArgs): Promise<Options> {
 
   const commandLineOptions: CommandLineOptions = parseArguments(args);
 
-  const { appOptions, outputDir } = await promptOptions(commandLineOptions);
+  validateCommandLineOptions(commandLineOptions);
 
-  if (appOptions.backend === "python" && appOptions.api === "graphql") {
-    return Promise.reject(
-      chalk.red.bold("Sorry, we currently do not support Python and GraphQL."),
-    );
-  }
+  const { appOptions, outputDir } = await promptOptions(commandLineOptions);
 
   const confirm = await confirmPrompt(appOptions);
 
   if (!confirm) {
     return Promise.reject(
-      chalk.red.bold("Blueprint app creation has been cancelled."),
+      new Error("Blueprint app creation has been cancelled."),
     );
   }
 
@@ -258,7 +284,7 @@ async function cli(args: CommandLineArgs): Promise<Options> {
   const changeDirectory = shell.cd(path);
 
   if (changeDirectory.code !== 0) {
-    return Promise.reject(chalk.red.bold("No directory exists. Exiting..."));
+    return Promise.reject(new Error("No directory exists. Exiting..."));
   }
 
   const clone = shell.exec(
@@ -266,7 +292,7 @@ async function cli(args: CommandLineArgs): Promise<Options> {
   );
 
   if (clone.code !== 0) {
-    return Promise.reject(chalk.red.bold("Git clone failed. Exiting..."));
+    return Promise.reject(new Error("Git clone failed. Exiting..."));
   }
 
   return appOptions;
