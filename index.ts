@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import chalk from "chalk";
 import cli from "./cli";
 import { Options } from "./cli/optionTypes";
 
@@ -17,9 +18,11 @@ async function scrub(rootDir: string, options: Options) {
 
 async function run() {
   const rootDir = __dirname;
-  const options = await cli(process.argv);
-  if (options) {
+  try {
+    const options = await cli(process.argv);
     await scrub(rootDir, options);
+  } catch (err) {
+    console.log(chalk.red.bold(err.message));
   }
 }
 

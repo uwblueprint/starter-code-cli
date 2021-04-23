@@ -79,6 +79,33 @@ const OPTIONS: OptionConfigs = {
   },
 };
 
+const OPTION_COMBINATION_DENY_LIST = [
+  [
+    { optionType: "backend", value: "python" },
+    { optionType: "api", value: "graphql" },
+  ],
+];
+
+const validateCommandLineOptions = (
+  commandLineOptions: CommandLineOptions,
+): void => {
+  OPTION_COMBINATION_DENY_LIST.forEach((combination) => {
+    if (
+      combination.every(
+        (option) =>
+          commandLineOptions[option.optionType as keyof CommandLineOptions] ===
+          option.value,
+      )
+    ) {
+      const formattedCombination = combination.map((c) => c.value).join(", ");
+      // TODO: custom error type would be a nice-to-have
+      throw new Error(
+        `Sorry, we currently do not support the following combination: ${formattedCombination}`,
+      );
+    }
+  });
+};
+
 const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
   const { argv } = yargs(args.slice(2)).options({
     backend: {
@@ -122,22 +149,34 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
 const promptOptions = async (
   options: CommandLineOptions,
 ): Promise<UserResponse> => {
-  const prompts = [];
+  let prompts = [];
+  const tsChoice = OPTIONS.backend.choices.find(
+    (choice) => choice.value === "typescript",
+  );
+
   if (!options.backend) {
     prompts.push({
       type: "list",
       name: "backend",
       message: OPTIONS.backend.message,
-      choices: OPTIONS.backend.choices,
+      choices: options.api === "graphql" ? [tsChoice] : OPTIONS.backend.choices,
     });
   }
+
+  let answers = await inquirer.prompt(prompts);
+  prompts = [];
+
+  const backend = options.backend || answers.backend;
+  const restChoice = OPTIONS.api.choices.find(
+    (choice) => choice.value === "rest",
+  );
 
   if (!options.api) {
     prompts.push({
       type: "list",
       name: "api",
       message: OPTIONS.api.message,
-      choices: OPTIONS.api.choices,
+      choices: backend === "python" ? [restChoice] : OPTIONS.api.choices,
     });
   }
 
@@ -168,11 +207,11 @@ const promptOptions = async (
     });
   }
 
-  const answers = await inquirer.prompt(prompts);
+  answers = await inquirer.prompt(prompts);
 
   return {
     appOptions: {
-      backend: options.backend || answers.backend,
+      backend,
       api: options.api || answers.api,
       database: options.database || answers.database,
       auth: (options.auth || answers.auth ? "auth" : null) as AuthType,
@@ -210,7 +249,7 @@ const confirmPrompt = async (options: Options) => {
   return confirm;
 };
 
-async function cli(args: CommandLineArgs): Promise<Options | null> {
+async function cli(args: CommandLineArgs): Promise<Options> {
   console.log(
     boxen(
       chalk.bold(
@@ -227,13 +266,16 @@ async function cli(args: CommandLineArgs): Promise<Options | null> {
 
   const commandLineOptions: CommandLineOptions = parseArguments(args);
 
+  validateCommandLineOptions(commandLineOptions);
+
   const { appOptions, outputDir } = await promptOptions(commandLineOptions);
 
   const confirm = await confirmPrompt(appOptions);
 
   if (!confirm) {
-    console.log(chalk.red.bold("Blueprint app creation has been cancelled."));
-    return null;
+    return Promise.reject(
+      new Error("Blueprint app creation has been cancelled."),
+    );
   }
 
   console.log(chalk.green.bold("Confirmed. Creating blueprint app..."));
@@ -242,8 +284,7 @@ async function cli(args: CommandLineArgs): Promise<Options | null> {
   const changeDirectory = shell.cd(path);
 
   if (changeDirectory.code !== 0) {
-    console.log("No directory exists. Exiting...");
-    return null;
+    return Promise.reject(new Error("No directory exists. Exiting..."));
   }
 
   const clone = shell.exec(
@@ -251,7 +292,7 @@ async function cli(args: CommandLineArgs): Promise<Options | null> {
   );
 
   if (clone.code !== 0) {
-    console.log("Git clone failed. Exiting...");
+    return Promise.reject(new Error("Git clone failed. Exiting..."));
   }
 
   return appOptions;
