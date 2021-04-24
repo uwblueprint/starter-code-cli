@@ -24,7 +24,7 @@ type Choice<T> = {
 type OptionConfig<T> = {
   id: string;
   description: string;
-  message: string;
+  message?: string;
   choices: ReadonlyArray<Choice<T>>;
 };
 
@@ -34,6 +34,7 @@ type OptionConfigs = {
   database: OptionConfig<DatabaseType>;
   auth: OptionConfig<void>;
   outputDir: OptionConfig<void>;
+  testing: OptionConfig<void>;
 };
 
 const OPTIONS: OptionConfigs = {
@@ -75,6 +76,11 @@ const OPTIONS: OptionConfigs = {
     description: "Output directory",
     message:
       "Which directory would you like the starter code folder to be in (default is current directory)?",
+    choices: [],
+  },
+  testing: {
+    id: "t",
+    description: "Test locally without cloning repo",
     choices: [],
   },
 };
@@ -123,7 +129,7 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
     database: {
       alias: OPTIONS.database.id,
       type: "string",
-      description: OPTIONS.api.description,
+      description: OPTIONS.database.description,
       choices: OPTIONS.database.choices.map((choice) => choice.value),
     },
     auth: {
@@ -136,6 +142,11 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
       type: "string",
       description: OPTIONS.outputDir.description,
     },
+    testing: {
+      alias: OPTIONS.testing.id,
+      type: "boolean",
+      description: OPTIONS.testing.description,
+    },
   });
 
   return {
@@ -143,6 +154,8 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
     api: argv.api as APIType,
     database: argv.database as DatabaseType,
     auth: argv.auth,
+    outputDir: argv.outputDir,
+    testing: argv.testing,
   };
 };
 
@@ -287,19 +300,21 @@ async function cli(args: CommandLineArgs): Promise<Options> {
     return Promise.reject(new Error("No directory exists. Exiting..."));
   }
 
-  const clone = shell.exec(
-    "git clone https://github.com/uwblueprint/starter-code-v2.git",
-  );
+  if (!commandLineOptions.testing) {
+    const clone = shell.exec(
+      "git clone https://github.com/uwblueprint/starter-code-v2.git",
+    );
 
-  if (clone.code !== 0) {
-    return Promise.reject(new Error("Git clone failed. Exiting..."));
-  }
+    if (clone.code !== 0) {
+      return Promise.reject(new Error("Git clone failed. Exiting..."));
+    }
 
-  console.log(chalk.green.bold("Removing .git ..."));
-  const removeGit = shell.exec("rm -rf starter-code-v2/.git");
+    console.log(chalk.green.bold("Removing .git ..."));
+    const removeGit = shell.exec("rm -rf starter-code-v2/.git");
 
-  if (removeGit.code !== 0) {
-    return Promise.reject(new Error("Remove .git failed. Exiting..."));
+    if (removeGit.code !== 0) {
+      return Promise.reject(new Error("Remove .git failed. Exiting..."));
+    }
   }
 
   return appOptions;
