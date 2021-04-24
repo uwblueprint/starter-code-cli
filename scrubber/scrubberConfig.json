@@ -2,11 +2,11 @@
   "cliOptionsToActions": {
     "typescript": {
       "tagsToKeep": ["typescript"],
-      "filesToDelete": ["python/"]
+      "filesToDelete": ["backend/python/"]
     },
     "python": {
       "tagsToKeep": ["python"],
-      "filesToDelete": ["typescript/"]
+      "filesToDelete": ["backend/typescript/"]
     },
     "rest": {
       "tagsToKeep": ["rest"]

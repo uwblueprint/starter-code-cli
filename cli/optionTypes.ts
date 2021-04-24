@@ -19,6 +19,7 @@ export type CommandLineOptions = {
   database?: DatabaseType;
   auth?: boolean;
   outputDir?: string;
+  testing?: boolean;
 };
 
 export type UserResponse = {
