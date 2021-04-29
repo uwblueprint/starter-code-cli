@@ -2,7 +2,12 @@
 Types required by the scrubber tool.
 */
 
-import { BackendType, APIType, DatabaseType } from "../cli/optionTypes";
+import {
+  BackendType,
+  APIType,
+  DatabaseType,
+  AuthType,
+} from "../cli/optionTypes";
 
 export type ScrubberActionType = "remove" | "keep";
 
@@ -11,7 +16,7 @@ export type ScrubberAction = {
   tags: string[];
 };
 
-export type CLIOption = BackendType | APIType | DatabaseType | "auth";
+export type CLIOption = BackendType | APIType | DatabaseType | AuthType;
 
 export type CLIOptionActions = {
   [key in CLIOption]: {

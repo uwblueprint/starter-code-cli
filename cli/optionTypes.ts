@@ -4,13 +4,13 @@ export type APIType = "rest" | "graphql";
 
 export type DatabaseType = "postgresql" | "mongodb";
 
-export type AuthType = "auth";
+export type AuthType = "auth" | "no-auth";
 
 export type Options = {
   backend: BackendType;
   api: APIType;
   database: DatabaseType;
-  auth?: AuthType;
+  auth: AuthType;
 };
 
 export type CommandLineOptions = {
