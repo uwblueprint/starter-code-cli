@@ -47,7 +47,7 @@ export function scrubFile(
         const line = lines[i];
         let tryProcessTag = true;
 
-        if (line.length === 0) {
+        if (!skip && line.length === 0) {
           scrubbedLines.push(line);
           continue;
         }

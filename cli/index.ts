@@ -227,7 +227,7 @@ const promptOptions = async (
       backend,
       api: options.api || answers.api,
       database: options.database || answers.database,
-      auth: (options.auth || answers.auth ? "auth" : null) as AuthType,
+      auth: (options.auth || answers.auth ? "auth" : "no-auth") as AuthType,
     },
     outputDir: options.outputDir || answers.outputDir,
   };

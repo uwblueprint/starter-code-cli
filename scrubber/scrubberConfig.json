@@ -9,10 +9,12 @@
       "filesToDelete": ["backend/typescript/"]
     },
     "rest": {
-      "tagsToKeep": ["rest"]
+      "tagsToKeep": ["rest"],
+      "filesToDelete": ["backend/typescript/graphql"]
     },
     "graphql": {
-      "tagsToKeep": ["graphql"]
+      "tagsToKeep": ["graphql"],
+      "filesToDelete": ["backend/typescript/rest"]
     },
     "postgresql": {
       "tagsToKeep": ["postgresql"]
@@ -22,8 +24,28 @@
     },
     "auth": {
       "tagsToKeep": ["auth"]
+    },
+    "no-auth": {
+      "tagsToKeep": [],
+      "filesToDelete": [
+        "backend/typescript/services/implementations/userService.ts",
+        "backend/typescript/services/interfaces/userService.ts",
+        "backend/typescript/services/implementations/authService.ts",
+        "backend/typescript/services/interfaces/authService.ts",
+        "backend/typescript/rest/userRoutes.ts",
+        "backend/typescript/rest/authRoutes.ts",
+        "backend/typescript/middlewares/auth.ts",
+        "backend/typescript/middlewares/auth.graphql.ts",
+        "backend/python/app/services/implementations/user_service.py",
+        "backend/python/app/services/interfaces/user_service.py",
+        "backend/python/app/services/implementations/auth_service.py",
+        "backend/python/app/services/interfaces/auth_service.py",
+        "backend/python/app/rest/user_routes.py",
+        "backend/python/app/rest/auth_routes.py",
+        "backend/python/app/middlewares/auth.py"
+      ]
     }
   },
   "dir": "starter-code-v2",
-  "ignore": ["node_modules", ".git", "yarn.lock"]
+  "ignore": ["node_modules", ".git", "yarn.lock", "public"]
 }
