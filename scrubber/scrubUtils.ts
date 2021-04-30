@@ -11,6 +11,8 @@ const FILE_TYPE_COMMENT: { [key: string]: string } = {
   json: "//",
   ts: "//",
   py: "#",
+  tsx: "//",
+  jsx: "//",
 };
 
 export function getAllTagsAndSetToRemove(
@@ -40,6 +42,7 @@ export function scrubFile(
       const commentType = ext && FILE_TYPE_COMMENT[ext];
       const scrubbedLines: string[] = [];
       let skip = false;
+      let currentTag = "";
 
       const lines: string[] = text.split("\n");
 
@@ -99,10 +102,14 @@ export function scrubFile(
               );
             }
 
-            // NOTE: nested tagging is not currently supported and will lead to unexpected behaviour.
-
             if (tags[tag] === "remove") {
-              skip = brace === TAG_START_CHAR;
+              if (!skip && brace === TAG_START_CHAR) {
+                currentTag = tag;
+                skip = true;
+              } else if (tag === currentTag) {
+                currentTag = "";
+                skip = false;
+              }
             }
 
             // We always scrub tags from the final file.

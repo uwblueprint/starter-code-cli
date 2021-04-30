@@ -26,7 +26,7 @@
       "tagsToKeep": ["auth"]
     },
     "no-auth": {
-      "tagsToKeep": [],
+      "tagsToKeep": ["no-auth"],
       "filesToDelete": [
         "backend/typescript/services/implementations/userService.ts",
         "backend/typescript/services/interfaces/userService.ts",
@@ -34,15 +34,30 @@
         "backend/typescript/services/interfaces/authService.ts",
         "backend/typescript/rest/userRoutes.ts",
         "backend/typescript/rest/authRoutes.ts",
-        "backend/typescript/middlewares/auth.ts",
-        "backend/typescript/middlewares/auth.graphql.ts",
+        "backend/typescript/graphql/resolvers/userResolvers.ts",
+        "backend/typescript/graphql/resolvers/authResolvers.ts",
+        "backend/typescript/graphql/types/userType.ts",
+        "backend/typescript/graphql/types/authType.ts",
+        "backend/typescript/models/user.ts",
+        "backend/typescript/middlewares",
+        "backend/typescript/utilities/firebaseRestClient.ts",
         "backend/python/app/services/implementations/user_service.py",
         "backend/python/app/services/interfaces/user_service.py",
         "backend/python/app/services/implementations/auth_service.py",
         "backend/python/app/services/interfaces/auth_service.py",
         "backend/python/app/rest/user_routes.py",
         "backend/python/app/rest/auth_routes.py",
-        "backend/python/app/middlewares/auth.py"
+        "backend/python/app/middlewares",
+        "backend/python/app/resources/create_user_dto.py",
+        "backend/python/app/resources/token.py",
+        "backend/python/app/resources/update_user_dto.py",
+        "backend/python/app/resources/user_dto.py",
+        "backend/python/app/utilities/firebase_rest_client.py",
+        "frontend/src/APIClients/AuthAPIClient.ts",
+        "frontend/src/components/auth",
+        "frontend/src/components/pages/Default.tsx",
+        "frontend/src/constants/AuthConstants.ts",
+        "frontend/src/contexts/AuthContext.ts"
       ]
     }
   },
