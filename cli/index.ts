@@ -249,7 +249,7 @@ const confirmPrompt = async (options: Options) => {
   const message =
     `You have chosen to create a ${backendName} app with a ` +
     `${apiName} API, ${databaseName} database, and ${
-      options.auth ? "" : "no "
+      options.auth === "auth" ? "" : "no "
     }built-in auth. Please confirm:`;
 
   const prompt = {
