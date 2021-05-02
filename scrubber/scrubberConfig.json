@@ -55,7 +55,6 @@
         "backend/python/app/utilities/firebase_rest_client.py",
         "frontend/src/APIClients/AuthAPIClient.ts",
         "frontend/src/components/auth",
-        "frontend/src/components/pages/Default.tsx",
         "frontend/src/constants/AuthConstants.ts",
         "frontend/src/contexts/AuthContext.ts"
       ]

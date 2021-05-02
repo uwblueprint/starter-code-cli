@@ -67,13 +67,15 @@ export function scrubFile(
 
         if (tryProcessTag) {
           if (tokens[0] in tags && tokens.length !== 2) {
-            console.warn(
-              chalk.yellowBright.bold(
-                `WARNING line ${
-                  i + 1
-                }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
-              ),
-            );
+            if (process.env.NODE_ENV !== "production") {
+              console.warn(
+                chalk.yellowBright.bold(
+                  `WARNING line ${
+                    i + 1
+                  }: possible malformed tag; tags must be on their own line preceded by '}' or followed by '{'`,
+                ),
+              );
+            }
             scrubbedLines.push(line);
             continue;
           }
