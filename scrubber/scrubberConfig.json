@@ -38,7 +38,7 @@
         "backend/typescript/graphql/resolvers/authResolvers.ts",
         "backend/typescript/graphql/types/userType.ts",
         "backend/typescript/graphql/types/authType.ts",
-        "backend/typescript/models/user.ts",
+        "backend/typescript/models/user.model.ts",
         "backend/typescript/middlewares",
         "backend/typescript/utilities/firebaseRestClient.ts",
         "backend/python/app/services/implementations/user_service.py",
@@ -48,6 +48,8 @@
         "backend/python/app/rest/user_routes.py",
         "backend/python/app/rest/auth_routes.py",
         "backend/python/app/middlewares",
+        "backend/python/app/models/user.py",
+        "backend/python/app/resources/auth_dto.py",
         "backend/python/app/resources/create_user_dto.py",
         "backend/python/app/resources/token.py",
         "backend/python/app/resources/update_user_dto.py",
@@ -56,7 +58,8 @@
         "frontend/src/APIClients/AuthAPIClient.ts",
         "frontend/src/components/auth",
         "frontend/src/constants/AuthConstants.ts",
-        "frontend/src/contexts/AuthContext.ts"
+        "frontend/src/contexts/AuthContext.ts",
+        "frontend/src/utils/LocalStorageUtils.ts"
       ]
     }
   },
