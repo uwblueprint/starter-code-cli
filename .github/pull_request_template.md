@@ -28,3 +28,4 @@
 - [ ] My commit messages are descriptive and in imperative tense. My commits are atomic and trivial commits are squashed or fixup'd into non-trivial commits
 - [ ] I have run the appropriate linter(s)
 - [ ] I have requested a review from the PL, as well as other devs who have background knowledge on this PR or who will be building on top of this PR
+- [ ] I have updated the version number in `package.json` according to Semantic Versioning specs ([semver](https://semver.org)) if I will be publishing these changes to the npm registry
