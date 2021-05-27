@@ -11,7 +11,8 @@
     "dev": "ts-node index.ts",
     "lint": "eslint . --ext .ts",
     "lint-fix": "eslint . --ext .ts --fix",
-    "prod": "tsc -p . && node bin/index.js"
+    "build": "tsc -p .",
+    "prod": "yarn build && node bin/index.js"
   },
   "devDependencies": {
     "@types/figlet": "^1.2.1",
