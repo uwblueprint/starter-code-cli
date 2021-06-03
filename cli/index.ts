@@ -302,7 +302,7 @@ async function cli(args: CommandLineArgs): Promise<Options> {
 
   if (!commandLineOptions.testing) {
     const clone = shell.exec(
-      "git clone --single-branch --branch alex/test-scrubber https://github.com/uwblueprint/starter-code-v2.git",
+      "git clone --single-branch --branch release https://github.com/uwblueprint/starter-code-v2.git",
     );
 
     if (clone.code !== 0) {
