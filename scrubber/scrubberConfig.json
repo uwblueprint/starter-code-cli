@@ -69,6 +69,7 @@
         "frontend/src/components/auth",
         "frontend/src/constants/AuthConstants.ts",
         "frontend/src/contexts/AuthContext.ts",
+        "frontend/src/types/AuthTypes.ts",
         "frontend/src/utils/LocalStorageUtils.ts"
       ]
     }
