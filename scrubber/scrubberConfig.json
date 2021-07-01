@@ -14,13 +14,21 @@
     },
     "graphql": {
       "tagsToKeep": ["graphql"],
-      "filesToDelete": ["backend/typescript/rest"]
+      "filesToDelete": [
+        "backend/typescript/rest",
+        "backend/typescript/swagger.yml"
+      ]
     },
     "postgresql": {
       "tagsToKeep": ["postgresql"]
     },
     "mongodb": {
-      "tagsToKeep": ["mongodb"]
+      "tagsToKeep": ["mongodb"],
+      "filesToDelete": [
+        "backend/typescript/migrate.js",
+        "backend/typescript/migrations",
+        "backend/typescript/umzug.ts"
+      ]
     },
     "auth": {
       "tagsToKeep": ["auth"]
@@ -39,7 +47,9 @@
         "backend/typescript/graphql/types/userType.ts",
         "backend/typescript/graphql/types/authType.ts",
         "backend/typescript/models/user.model.ts",
-        "backend/typescript/middlewares",
+        "backend/typescript/middlewares/auth.ts",
+        "backend/typescript/middlewares/validators/authValidators.ts",
+        "backend/typescript/middlewares/validators/userValidators.ts",
         "backend/typescript/utilities/firebaseRestClient.ts",
         "backend/python/app/services/implementations/user_service.py",
         "backend/python/app/services/interfaces/user_service.py",
@@ -47,7 +57,7 @@
         "backend/python/app/services/interfaces/auth_service.py",
         "backend/python/app/rest/user_routes.py",
         "backend/python/app/rest/auth_routes.py",
-        "backend/python/app/middlewares",
+        "backend/python/app/middlewares/auth.py",
         "backend/python/app/models/user.py",
         "backend/python/app/resources/auth_dto.py",
         "backend/python/app/resources/create_user_dto.py",
@@ -59,6 +69,7 @@
         "frontend/src/components/auth",
         "frontend/src/constants/AuthConstants.ts",
         "frontend/src/contexts/AuthContext.ts",
+        "frontend/src/types/AuthTypes.ts",
         "frontend/src/utils/LocalStorageUtils.ts"
       ]
     }
