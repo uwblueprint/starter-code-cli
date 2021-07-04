@@ -7,6 +7,8 @@ import {
   APIType,
   DatabaseType,
   AuthType,
+  FileStorageType,
+  CSVExportType,
 } from "../cli/optionTypes";
 
 export type ScrubberActionType = "remove" | "keep";
@@ -16,7 +18,13 @@ export type ScrubberAction = {
   tags: string[];
 };
 
-export type CLIOption = BackendType | APIType | DatabaseType | AuthType;
+export type CLIOption =
+  | BackendType
+  | APIType
+  | DatabaseType
+  | AuthType
+  | FileStorageType
+  | CSVExportType;
 
 export type CLIOptionActions = {
   [key in CLIOption]: {
