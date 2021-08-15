@@ -13,7 +13,6 @@ import {
   DatabaseType,
   AuthType,
   FileStorageType,
-  CSVExportType,
 } from "./optionTypes";
 
 type CommandLineArgs = Array<string>;
@@ -36,7 +35,6 @@ type OptionConfigs = {
   database: OptionConfig<DatabaseType>;
   auth: OptionConfig<void>;
   fileStorage: OptionConfig<void>;
-  csvExport: OptionConfig<void>;
   outputDir: OptionConfig<void>;
   testing: OptionConfig<void>;
 };
@@ -79,12 +77,6 @@ const OPTIONS: OptionConfigs = {
     id: "f",
     description: "Include built-in file storage features",
     message: "Would you like built-in file storage features?",
-    choices: [],
-  },
-  csvExport: {
-    id: "c",
-    description: "Include built-in csv export features",
-    message: "Would you like built-in csv export features?",
     choices: [],
   },
   outputDir: {
@@ -158,11 +150,6 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
       type: "boolean",
       description: OPTIONS.fileStorage.description,
     },
-    csvExport: {
-      alias: OPTIONS.csvExport.id,
-      type: "boolean",
-      description: OPTIONS.csvExport.description,
-    },
     outputDir: {
       alias: OPTIONS.outputDir.id,
       type: "string",
@@ -181,7 +168,6 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
     database: argv.database as DatabaseType,
     auth: argv.auth,
     fileStorage: argv.fileStorage,
-    csvExport: argv.csvExport,
     outputDir: argv.outputDir,
     testing: argv.testing,
   };
@@ -248,15 +234,6 @@ const promptOptions = async (
     });
   }
 
-  if (!options.csvExport) {
-    prompts.push({
-      type: "confirm",
-      name: "csvExport",
-      message: OPTIONS.csvExport.message,
-      default: false,
-    });
-  }
-
   if (!options.outputDir) {
     prompts.push({
       type: "output",
@@ -277,9 +254,6 @@ const promptOptions = async (
       fileStorage: (options.fileStorage || answers.fileStorage
         ? "file-storage"
         : "no-file-storage") as FileStorageType,
-      csvExport: (options.csvExport || answers.csvExport
-        ? "csv-export"
-        : "no-csv-export") as CSVExportType,
     },
     outputDir: options.outputDir || answers.outputDir,
   };
@@ -302,11 +276,9 @@ const confirmPrompt = async (options: Options) => {
     `You have chosen to create a ${backendName} app with a ` +
     `${apiName} API, ${databaseName} database, ${
       options.auth === "auth" ? "" : "no "
-    }built-in auth, ${
+    }built-in auth, and ${
       options.fileStorage === "file-storage" ? "" : "no "
-    }built-in file storage, and ${
-      options.csvExport === "csv-export" ? "" : "no "
-    }built-in csv export. Please confirm:`;
+    }built-in file storage. Please confirm:`;
 
   const prompt = {
     type: "confirm",
