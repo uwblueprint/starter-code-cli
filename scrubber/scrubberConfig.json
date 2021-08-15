@@ -78,13 +78,7 @@
     },
     "no-file-storage": {
       "tagsToKeep": ["no-file-storage"]
-    },
-    "csv-export": {
-      "tagsToKeep": ["csv-export"]
-    },
-    "no-csv-export": {
-      "tagsToKeep": ["no-csv-export"]
-    },
+    }
   },
   "dir": "starter-code-v2",
   "ignore": ["node_modules", ".git", "yarn.lock", "public"]
