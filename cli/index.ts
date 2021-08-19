@@ -305,6 +305,13 @@ async function cli(args: CommandLineArgs): Promise<Options> {
     ),
   );
 
+  console.log(
+    chalk.yellowBright.bold(
+      "Note: file storage features are not fully supported yet," +
+        " please select No when prompted.",
+    ),
+  );
+
   const commandLineOptions: CommandLineOptions = parseArguments(args);
 
   validateCommandLineOptions(commandLineOptions);

@@ -27,7 +27,8 @@
       "filesToDelete": [
         "backend/typescript/migrate.js",
         "backend/typescript/migrations",
-        "backend/typescript/umzug.ts"
+        "backend/typescript/umzug.ts",
+        "backend/python/migrations"
       ]
     },
     "auth": {
@@ -38,6 +39,7 @@
       "filesToDelete": [
         "backend/typescript/services/implementations/userService.ts",
         "backend/typescript/services/interfaces/userService.ts",
+        "backend/typescript/services/implementations/__tests__/userService.test.ts",
         "backend/typescript/services/implementations/authService.ts",
         "backend/typescript/services/interfaces/authService.ts",
         "backend/typescript/rest/userRoutes.ts",
@@ -65,19 +67,29 @@
         "backend/python/app/resources/update_user_dto.py",
         "backend/python/app/resources/user_dto.py",
         "backend/python/app/utilities/firebase_rest_client.py",
+        "backend/python/tests/functional/test_user_routes.py",
+        "backend/python/tests/functional/test_user_service.py",
+        "backend/python/tests/unit/test_models.py",
         "frontend/src/APIClients/AuthAPIClient.ts",
         "frontend/src/components/auth",
         "frontend/src/constants/AuthConstants.ts",
         "frontend/src/contexts/AuthContext.ts",
         "frontend/src/types/AuthTypes.ts",
-        "frontend/src/utils/LocalStorageUtils.ts"
+        "frontend/src/utils/LocalStorageUtils.ts",
+        "frontend/src/utils/__tests__/LocalStorageUtils.test.ts"
       ]
     },
     "file-storage": {
       "tagsToKeep": ["file-storage"]
     },
     "no-file-storage": {
-      "tagsToKeep": ["no-file-storage"]
+      "tagsToKeep": ["no-file-storage"],
+      "filesToDelete": [
+        "backend/typescript/services/implementations/fileStorageService.ts",
+        "backend/typescript/services/interfaces/fileStorageService.ts",
+        "backend/python/app/services/implementations/file_storage_service.py",
+        "backend/python/app/services/interfaces/file_storage_service.py"
+      ]
     }
   },
   "dir": "starter-code-v2",
