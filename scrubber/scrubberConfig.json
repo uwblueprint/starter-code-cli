@@ -16,7 +16,8 @@
       "tagsToKeep": ["graphql"],
       "filesToDelete": [
         "backend/typescript/rest",
-        "backend/typescript/swagger.yml"
+        "backend/typescript/swagger.yml",
+        "backend/typescript/utilities/responseUtil.ts"
       ]
     },
     "postgresql": {
