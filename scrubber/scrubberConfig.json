@@ -64,6 +64,7 @@
         "backend/python/app/models/user.py",
         "backend/python/app/resources/auth_dto.py",
         "backend/python/app/resources/create_user_dto.py",
+        "backend/python/app/resources/register_user_dto.py",
         "backend/python/app/resources/token.py",
         "backend/python/app/resources/update_user_dto.py",
         "backend/python/app/resources/user_dto.py",
