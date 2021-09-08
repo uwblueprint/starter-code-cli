@@ -1,6 +1,6 @@
 {
   "name": "@uwblueprint/create-bp-app",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Starter code generation CLI tool.",
   "main": "index.js",
   "bin": "bin/index.js",

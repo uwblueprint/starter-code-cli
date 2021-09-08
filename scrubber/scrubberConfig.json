@@ -91,7 +91,8 @@
         "backend/typescript/services/interfaces/fileStorageService.ts",
         "backend/python/app/services/implementations/file_storage_service.py",
         "backend/python/app/services/interfaces/file_storage_service.py",
-        "backend/python/migrations/versions/797bfedc3a06_add_entity_file_storage_file_name.py"
+        "backend/python/migrations/versions/797bfedc3a06_add_entity_file_storage_file_name.py",
+        "frontend/src/utils/FileUtils.ts"
       ]
     }
   },
