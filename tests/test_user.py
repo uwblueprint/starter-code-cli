@@ -9,11 +9,17 @@ def get_users(token):
     return response.json()
 
 
-def get_user_by_id(token, id):
-    response = requests.get(
-        f"http://localhost:5000/users?userId={id}",
-        headers={"Authorization": "Bearer " + token},
-    )
+def get_user_by_id(token, id, lang):
+    if lang == "ts":
+        response = requests.get(
+            f"http://localhost:5000/users?userId={id}",
+            headers={"Authorization": "Bearer " + token},
+        )
+    else:
+        response = requests.get(
+            f"http://localhost:5000/users?user_id={id}",
+            headers={"Authorization": "Bearer " + token},
+        )
     assert response.status_code == 200
     return response.json()
 
@@ -53,11 +59,17 @@ def update_user(token, id, body):
     return response.json()
 
 
-def delete_user(token, id):
-    response = requests.delete(
-        f"http://localhost:5000/users?userId={id}",
-        headers={"Authorization": "Bearer " + token},
-    )
+def delete_user(token, id, lang):
+    if lang == "ts":
+        response = requests.delete(
+            f"http://localhost:5000/users?userId={id}",
+            headers={"Authorization": "Bearer " + token},
+        )
+    else:
+        response = requests.delete(
+            f"http://localhost:5000/users?user_id={id}",
+            headers={"Authorization": "Bearer " + token},
+        )
     assert response.status_code == 204
 
 
@@ -92,8 +104,9 @@ def test_users(token, lang):
         }
     user = create_user(token, body1)
     updated_user = update_user(token, user["id"], body2)
-    retrieved_user = get_user_by_id(token, user["id"])
-    assert updated_user == retrieved_user
-    get_user_by_email(token, retrieved_user["email"])
+    retrieved_user_by_id = get_user_by_id(token, user["id"], lang)
+    assert updated_user == retrieved_user_by_id
+    retrieved_user_by_email = get_user_by_email(token, updated_user["email"])
+    assert updated_user == retrieved_user_by_email
     get_users(token)
-    delete_user(token, user["id"])
+    delete_user(token, user["id"], lang)
