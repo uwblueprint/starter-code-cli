@@ -1,42 +1,40 @@
 import requests
 
 
-def get_users(token):
-    response = requests.get(
-        "http://localhost:5000/users", headers={"Authorization": "Bearer " + token}
-    )
+def get_users(auth_header):
+    response = requests.get("http://localhost:5000/users", headers=auth_header)
     assert response.status_code == 200
     return response.json()
 
 
-def get_user_by_id(token, id, lang):
+def get_user_by_id(auth_header, id, lang):
     if lang == "ts":
         response = requests.get(
             f"http://localhost:5000/users?userId={id}",
-            headers={"Authorization": "Bearer " + token},
+            headers=auth_header,
         )
     else:
         response = requests.get(
             f"http://localhost:5000/users?user_id={id}",
-            headers={"Authorization": "Bearer " + token},
+            headers=auth_header,
         )
     assert response.status_code == 200
     return response.json()
 
 
-def get_user_by_email(token, email):
+def get_user_by_email(auth_header, email):
     response = requests.get(
         f"http://localhost:5000/users?email={email}",
-        headers={"Authorization": "Bearer " + token},
+        headers=auth_header,
     )
     assert response.status_code == 200
     return response.json()
 
 
-def create_user(token, body):
+def create_user(auth_header, body):
     response = requests.post(
         f"http://localhost:5000/users/",
-        headers={"Authorization": "Bearer " + token},
+        headers=auth_header,
         json=body,
     )
     assert response.status_code == 201
@@ -46,10 +44,10 @@ def create_user(token, body):
     return response.json()
 
 
-def update_user(token, id, body):
+def update_user(auth_header, id, body):
     response = requests.put(
         f"http://localhost:5000/users/{id}",
-        headers={"Authorization": "Bearer " + token},
+        headers=auth_header,
         json=body,
     )
     assert response.status_code == 200
@@ -59,21 +57,21 @@ def update_user(token, id, body):
     return response.json()
 
 
-def delete_user(token, id, lang):
+def delete_user(auth_header, id, lang):
     if lang == "ts":
         response = requests.delete(
             f"http://localhost:5000/users?userId={id}",
-            headers={"Authorization": "Bearer " + token},
+            headers=auth_header,
         )
     else:
         response = requests.delete(
             f"http://localhost:5000/users?user_id={id}",
-            headers={"Authorization": "Bearer " + token},
+            headers=auth_header,
         )
     assert response.status_code == 204
 
 
-def test_users(token, lang):
+def test_users(auth_header, lang):
     if lang == "ts":
         body1 = {
             "firstName": "Testing",
@@ -102,11 +100,11 @@ def test_users(token, lang):
             "role": "User",
             "email": "infra@uwblueprint.org",
         }
-    user = create_user(token, body1)
-    updated_user = update_user(token, user["id"], body2)
-    retrieved_user_by_id = get_user_by_id(token, user["id"], lang)
+    user = create_user(auth_header, body1)
+    updated_user = update_user(auth_header, user["id"], body2)
+    retrieved_user_by_id = get_user_by_id(auth_header, user["id"], lang)
     assert updated_user == retrieved_user_by_id
-    retrieved_user_by_email = get_user_by_email(token, updated_user["email"])
+    retrieved_user_by_email = get_user_by_email(auth_header, updated_user["email"])
     assert updated_user == retrieved_user_by_email
-    get_users(token)
-    delete_user(token, user["id"], lang)
+    get_users(auth_header)
+    delete_user(auth_header, user["id"], lang)

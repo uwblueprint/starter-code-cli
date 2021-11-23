@@ -2,66 +2,78 @@ import json
 import requests
 
 
-def get_entities(token):
-    response = requests.get(
-        "http://localhost:5000/entities", headers={"Authorization": "Bearer " + token}
-    )
+def get_entities(auth_header):
+    response = requests.get("http://localhost:5000/entities", headers=auth_header)
     assert response.status_code == 200
     return response.json()
 
 
-def get_entity_by_id(token, id):
+def get_entity_by_id(auth_header, id):
     response = requests.get(
         f"http://localhost:5000/entities/{id}",
-        headers={"Authorization": "Bearer " + token},
+        headers=auth_header,
     )
     assert response.status_code == 200
     return response.json()
 
 
-def get_file(token, filename):
+def get_file(auth_header, filename):
     response = requests.get(
         f"http://localhost:5000/entities/files/{filename}",
-        headers={"Authorization": "Bearer " + token},
+        headers=auth_header,
     )
     assert response.status_code == 200
 
 
-def create_entity(token, body):
-    response = requests.post(
-        f"http://localhost:5000/entities/",
-        headers={"Authorization": "Bearer " + token},
-        files={},
-        data={"body": json.dumps(body)},
-    )
+def create_entity(auth_header, body, fs):
+    if fs:
+        response = requests.post(
+            f"http://localhost:5000/entities/",
+            headers=auth_header,
+            files={},
+            data={"body": json.dumps(body)},
+        )
+    else:
+        response = requests.post(
+            f"http://localhost:5000/entities/",
+            json=body,
+            headers=auth_header,
+        )
     assert response.status_code == 201
     actual = {k: v for k, v in response.json().items() if k in body}
     assert actual == body
     return response.json()
 
 
-def update_entity(token, id, body):
-    response = requests.put(
-        f"http://localhost:5000/entities/{id}",
-        headers={"Authorization": "Bearer " + token},
-        files={},
-        data={"body": json.dumps(body)},
-    )
+def update_entity(auth_header, id, body, fs):
+    if fs:
+        response = requests.put(
+            f"http://localhost:5000/entities/{id}",
+            headers=auth_header,
+            files={},
+            data={"body": json.dumps(body)},
+        )
+    else:
+        response = requests.put(
+            f"http://localhost:5000/entities/{id}",
+            json=body,
+            headers=auth_header,
+        )
     assert response.status_code == 200
     actual = {k: v for k, v in response.json().items() if k in body}
     assert actual == body
     return response.json()
 
 
-def delete_entity(token, id):
+def delete_entity(auth_header, id):
     response = requests.delete(
         f"http://localhost:5000/entities/{id}",
-        headers={"Authorization": "Bearer " + token},
+        headers=auth_header,
     )
     assert response.status_code == 200
 
 
-def test_entities(token, lang):
+def test_entities(auth_header, lang, fs):
     if lang == "ts":
         body1 = {
             "stringField": "test 1",
@@ -92,9 +104,9 @@ def test_entities(token, lang):
             "string_array_field": ["test2"],
             "bool_field": False,
         }
-    entity = create_entity(token, body1)
-    updated_entity = update_entity(token, entity["id"], body2)
-    retrieved_entity = get_entity_by_id(token, entity["id"])
+    entity = create_entity(auth_header, body1, fs)
+    updated_entity = update_entity(auth_header, entity["id"], body2)
+    retrieved_entity = get_entity_by_id(auth_header, entity["id"])
     assert updated_entity == retrieved_entity
-    get_entities(token)
-    delete_entity(token, entity["id"])
+    get_entities(auth_header)
+    delete_entity(auth_header, entity["id"])

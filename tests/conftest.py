@@ -16,12 +16,24 @@ def lang(request):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def token(lang):
+def auth(request):
+    return bool(request.config.getoption("--auth"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def fs(request):
+    return bool(request.config.getoption("--fs"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def auth_header(lang, auth):
+    if not auth:
+        return {}
     response = requests.post(
         "http://localhost:5000/auth/login",
         json={"email": os.getenv("EMAIL"), "password": os.getenv("PASSWORD")},
     )
     if lang == "ts":
-        return response.json()["accessToken"]
+        return {"Authorization": "Bearer " + response.json()["accessToken"]}
     else:
-        return response.json()["access_token"]
+        return {"Authorization": "Bearer " + response.json()["access_token"]}
