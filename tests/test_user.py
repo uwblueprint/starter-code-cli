@@ -34,8 +34,8 @@ def get_user_by_email(auth_header, email):
 def create_user(auth_header, body):
     response = requests.post(
         f"http://localhost:5000/users/",
-        headers=auth_header,
         json=body,
+        headers=auth_header,
     )
     assert response.status_code == 201
     expected = {k: v for k, v in body.items() if k != "password"}
@@ -47,8 +47,8 @@ def create_user(auth_header, body):
 def update_user(auth_header, id, body):
     response = requests.put(
         f"http://localhost:5000/users/{id}",
-        headers=auth_header,
         json=body,
+        headers=auth_header,
     )
     assert response.status_code == 200
     expected = {k: v for k, v in body.items()}
