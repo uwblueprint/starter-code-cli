@@ -74,28 +74,28 @@ def delete_user(auth_header, id, lang):
 def test_users(auth_header, lang):
     if lang == "ts":
         body1 = {
-            "firstName": "Testing",
+            "firstName": "Test",
             "lastName": "Script",
             "role": "User",
-            "email": "testscript@uwblueprint.org",
+            "email": "infra@uwblueprint.org",
             "password": "password",
         }
         body2 = {
-            "firstName": "Testing2",
+            "firstName": "Test2",
             "lastName": "Script2",
             "role": "User",
-            "email": "testscript2@uwblueprint.org",
+            "email": "infra@uwblueprint.org",
         }
     else:
         body1 = {
-            "first_name": "Testing",
+            "first_name": "Test",
             "last_name": "Script",
             "role": "User",
             "email": "infra@uwblueprint.org",
             "password": "password123",
         }
         body2 = {
-            "first_name": "Testing2",
+            "first_name": "Test2",
             "last_name": "Script2",
             "role": "User",
             "email": "infra@uwblueprint.org",

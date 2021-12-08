@@ -8,6 +8,8 @@ load_dotenv()
 
 def pytest_addoption(parser):
     parser.addoption("--lang", action="store", default="ts")
+    parser.addoption("--auth", action="store", default=False)
+    parser.addoption("--fs", action="store", default=False)
 
 
 @pytest.fixture(scope="session", autouse=True)

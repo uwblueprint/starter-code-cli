@@ -76,14 +76,14 @@ def delete_entity(auth_header, id):
 def test_entities(auth_header, lang, fs):
     if lang == "ts":
         body1 = {
-            "stringField": "test 1",
+            "stringField": "TestScript1",
             "intField": 1,
             "enumField": "A",
-            "stringArrayField": ["test1"],
+            "stringArrayField": ["test1", "test2"],
             "boolField": True,
         }
         body2 = {
-            "stringField": "test 2",
+            "stringField": "TestScript2",
             "intField": 2,
             "enumField": "B",
             "stringArrayField": ["test2"],
@@ -91,21 +91,21 @@ def test_entities(auth_header, lang, fs):
         }
     else:
         body1 = {
-            "string_field": "test 1",
+            "string_field": "TestScript1",
             "int_field": 1,
             "enum_field": "A",
-            "string_array_field": ["test1"],
+            "string_array_field": ["test1", "test2"],
             "bool_field": True,
         }
         body2 = {
-            "string_field": "test 2",
+            "string_field": "TestScript2",
             "int_field": 2,
             "enum_field": "B",
             "string_array_field": ["test2"],
             "bool_field": False,
         }
     entity = create_entity(auth_header, body1, fs)
-    updated_entity = update_entity(auth_header, entity["id"], body2)
+    updated_entity = update_entity(auth_header, entity["id"], body2, fs)
     retrieved_entity = get_entity_by_id(auth_header, entity["id"])
     assert updated_entity == retrieved_entity
     get_entities(auth_header)
