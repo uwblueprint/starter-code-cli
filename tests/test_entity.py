@@ -23,14 +23,15 @@ def get_file(auth_header, filename):
         headers=auth_header,
     )
     assert response.status_code == 200
+    return response.json()
 
 
-def create_entity(auth_header, body, fs):
+def create_entity(auth_header, body, fs, files):
     if fs:
         response = requests.post(
             f"http://localhost:5000/entities/",
             headers=auth_header,
-            files={},
+            files=files,
             data={"body": json.dumps(body)},
         )
     else:
@@ -45,12 +46,12 @@ def create_entity(auth_header, body, fs):
     return response.json()
 
 
-def update_entity(auth_header, id, body, fs):
+def update_entity(auth_header, id, body, fs, files):
     if fs:
         response = requests.put(
             f"http://localhost:5000/entities/{id}",
             headers=auth_header,
-            files={},
+            files=files,
             data={"body": json.dumps(body)},
         )
     else:
@@ -89,6 +90,7 @@ def test_entities(auth_header, lang, fs):
             "stringArrayField": ["test2"],
             "boolField": False,
         }
+        filenameField = "fileName"
     else:
         body1 = {
             "string_field": "TestScript1",
@@ -104,8 +106,13 @@ def test_entities(auth_header, lang, fs):
             "string_array_field": ["test2"],
             "bool_field": False,
         }
-    entity = create_entity(auth_header, body1, fs)
-    updated_entity = update_entity(auth_header, entity["id"], body2, fs)
+        filenameField = "file_name"
+    files1 = {"file": ("dog.jpg", open("dog.jpg", "rb"), "image/jpeg")}
+    files2 = {"file": ("cat.png", open("cat.png", "rb"), "image/png")}
+    entity = create_entity(auth_header, body1, fs, files1)
+    get_file(auth_header, entity[filenameField])
+    updated_entity = update_entity(auth_header, entity["id"], body2, fs, files2)
+    get_file(auth_header, updated_entity[filenameField])
     retrieved_entity = get_entity_by_id(auth_header, entity["id"])
     assert updated_entity == retrieved_entity
     get_entities(auth_header)
