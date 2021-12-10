@@ -71,7 +71,10 @@ def delete_user(auth_header, id, lang):
     assert response.status_code == 204
 
 
-def test_users(auth_header, lang):
+def test_users(auth_header, lang, api):
+    if api != "rest":
+        return
+
     if lang == "ts":
         body1 = {
             "firstName": "Test",

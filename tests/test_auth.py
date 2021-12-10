@@ -29,8 +29,8 @@ def logout(auth_header, id):
     assert response.status_code == 204
 
 
-def test_auth(auth_header, lang):
-    if not auth_header:
+def test_auth(auth_header, lang, api):
+    if not auth_header or api != "rest":
         return
 
     if lang == "ts":

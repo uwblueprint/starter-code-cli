@@ -74,7 +74,10 @@ def delete_entity(auth_header, id):
     assert response.status_code == 200
 
 
-def test_entities(auth_header, lang, fs):
+def test_entities(auth_header, lang, api, fs):
+    if api != "rest":
+        return
+
     if lang == "ts":
         body1 = {
             "stringField": "TestScript1",

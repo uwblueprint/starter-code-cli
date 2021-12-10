@@ -8,6 +8,7 @@ load_dotenv()
 
 def pytest_addoption(parser):
     parser.addoption("--lang", action="store", default="ts")
+    parser.addoption("--api", action="store", default="rest")
     parser.addoption("--auth", action="store", default=False)
     parser.addoption("--fs", action="store", default=False)
 
@@ -15,6 +16,11 @@ def pytest_addoption(parser):
 @pytest.fixture(scope="session", autouse=True)
 def lang(request):
     return request.config.getoption("--lang")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def api(request):
+    return request.config.getoption("--api")
 
 
 @pytest.fixture(scope="session", autouse=True)
