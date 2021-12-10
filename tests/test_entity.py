@@ -26,12 +26,12 @@ def get_file(auth_header, filename):
     return response.json()
 
 
-def create_entity(auth_header, body, fs, files):
+def create_entity(auth_header, body, fs, file):
     if fs:
         response = requests.post(
             f"http://localhost:5000/entities/",
             headers=auth_header,
-            files=files,
+            files={"file": file},
             data={"body": json.dumps(body)},
         )
     else:
@@ -46,12 +46,12 @@ def create_entity(auth_header, body, fs, files):
     return response.json()
 
 
-def update_entity(auth_header, id, body, fs, files):
+def update_entity(auth_header, id, body, fs, file):
     if fs:
         response = requests.put(
             f"http://localhost:5000/entities/{id}",
             headers=auth_header,
-            files=files,
+            files={"file": file},
             data={"body": json.dumps(body)},
         )
     else:
@@ -107,12 +107,14 @@ def test_entities(auth_header, lang, fs):
             "bool_field": False,
         }
         filenameField = "file_name"
-    files1 = {"file": ("dog.jpg", open("dog.jpg", "rb"), "image/jpeg")}
-    files2 = {"file": ("cat.png", open("cat.png", "rb"), "image/png")}
-    entity = create_entity(auth_header, body1, fs, files1)
-    get_file(auth_header, entity[filenameField])
-    updated_entity = update_entity(auth_header, entity["id"], body2, fs, files2)
-    get_file(auth_header, updated_entity[filenameField])
+    file1 = ("dog.jpg", open("dog.jpg", "rb"), "image/jpeg")
+    file2 = ("cat.png", open("cat.png", "rb"), "image/png")
+    entity = create_entity(auth_header, body1, fs, file1)
+    if fs:
+        get_file(auth_header, entity[filenameField])
+    updated_entity = update_entity(auth_header, entity["id"], body2, fs, file2)
+    if fs:
+        get_file(auth_header, updated_entity[filenameField])
     retrieved_entity = get_entity_by_id(auth_header, entity["id"])
     assert updated_entity == retrieved_entity
     get_entities(auth_header)
