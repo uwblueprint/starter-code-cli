@@ -223,10 +223,12 @@ def delete_entity(auth_header, id):
     )
     assert "data" in response.json()
     assert "deleteEntity" in response.json()["data"]
-    return response.json()["data"]["deleteEntity"]
+    data = response.json()["data"]["deleteEntity"]
+    assert data == id
+    return data
 
 
-def test_entities(auth_header, lang, api, fs):
+def test_entities_gql(auth_header, lang, api, fs):
     if api == "rest":
         return
 

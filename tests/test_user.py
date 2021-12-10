@@ -51,9 +51,8 @@ def update_user(auth_header, id, body):
         headers=auth_header,
     )
     assert response.status_code == 200
-    expected = {k: v for k, v in body.items()}
     actual = {k: v for k, v in response.json().items() if k in body}
-    assert actual == expected
+    assert actual == body
     return response.json()
 
 
@@ -72,7 +71,7 @@ def delete_user(auth_header, id, lang):
 
 
 def test_users(auth_header, lang, api):
-    if api != "rest":
+    if not auth_header or api != "rest":
         return
 
     if lang == "ts":
