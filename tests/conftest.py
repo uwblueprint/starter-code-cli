@@ -1,3 +1,4 @@
+import inflection
 import os
 import pytest
 import requests
@@ -7,41 +8,83 @@ load_dotenv()
 
 
 def pytest_addoption(parser):
-    parser.addoption("--lang", action="store", default="ts")
-    parser.addoption("--api", action="store", default="rest")
-    parser.addoption("--auth", action="store", default=False)
-    parser.addoption("--fs", action="store", default=False)
+    parser.addoption("--lang", action="store", default="ts", choices=["ts", "python"])
+    parser.addoption(
+        "--api", action="store", default="rest", choices=["rest", "graphql"]
+    )
+    parser.addoption("--auth", action="store_true")
+    parser.addoption("--fs", action="store_true")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def lang(request):
     return request.config.getoption("--lang")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def api(request):
     return request.config.getoption("--api")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def auth(request):
-    return bool(request.config.getoption("--auth"))
+    return request.config.getoption("--auth")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def fs(request):
-    return bool(request.config.getoption("--fs"))
+    return request.config.getoption("--fs")
 
 
-@pytest.fixture(scope="session", autouse=True)
-def auth_header(lang, auth):
+@pytest.fixture(scope="session")
+def backend_url():
+    return os.getenv("TEST_SCRIPT_BACKEND_URL")
+
+
+@pytest.fixture(scope="module")
+def auth_user(backend_url, api, auth):
     if not auth:
         return {}
-    response = requests.post(
-        "http://localhost:5000/auth/login",
-        json={"email": os.getenv("EMAIL"), "password": os.getenv("PASSWORD")},
-    )
-    if lang == "ts":
-        return {"Authorization": "Bearer " + response.json()["accessToken"]}
+    if api == "rest":
+        response = requests.post(
+            f"{backend_url}/auth/login",
+            json={
+                "email": os.getenv("TEST_SCRIPT_EMAIL"),
+                "password": os.getenv("TEST_SCRIPT_PASSWORD"),
+            },
+        )
+        return response.json()
     else:
-        return {"Authorization": "Bearer " + response.json()["access_token"]}
+        query = """
+        mutation($email: String!, $password: String!) {
+            login(email: $email, password: $password) {
+                id
+                firstName
+                lastName
+                email
+                role
+                accessToken
+            }
+        }
+        """
+        response = requests.post(
+            f"{backend_url}/graphql",
+            json={
+                "query": query,
+                "variables": {
+                    "email": os.getenv("TEST_SCRIPT_EMAIL"),
+                    "password": os.getenv("TEST_SCRIPT_PASSWORD"),
+                },
+            },
+        )
+        return response.json()["data"]["login"]
+
+
+@pytest.fixture(scope="module")
+def auth_header(auth_user, lang):
+    if not auth_user:
+        return {}
+    accessTokenField = "accessToken"
+    if lang != "ts":
+        accessTokenField = inflection.underscore(accessTokenField)
+    return {"Authorization": "Bearer " + auth_user[accessTokenField]}

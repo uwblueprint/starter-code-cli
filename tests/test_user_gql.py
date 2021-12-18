@@ -1,7 +1,8 @@
+import inflection
 import requests
 
 
-def get_users(auth_header):
+def get_users(backend_url, auth_header):
     query = """
     query {
         users {
@@ -14,7 +15,7 @@ def get_users(auth_header):
     }
     """
     response = requests.post(
-        "http://localhost:5000/graphql",
+        f"{backend_url}/graphql",
         json={"query": query},
         headers=auth_header,
     )
@@ -23,7 +24,7 @@ def get_users(auth_header):
     return response.json()["data"]["users"]
 
 
-def get_user_by_id(auth_header, id):
+def get_user_by_id(backend_url, auth_header, id):
     query = """
     query($id: ID!) {
         userById(id: $id) {
@@ -36,7 +37,7 @@ def get_user_by_id(auth_header, id):
     }
     """
     response = requests.post(
-        "http://localhost:5000/graphql",
+        f"{backend_url}/graphql",
         json={"query": query, "variables": {"id": id}},
         headers=auth_header,
     )
@@ -45,7 +46,7 @@ def get_user_by_id(auth_header, id):
     return response.json()["data"]["userById"]
 
 
-def get_user_by_email(auth_header, email):
+def get_user_by_email(backend_url, auth_header, email):
     query = """
     query($email: String!) {
         userByEmail(email: $email) {
@@ -58,7 +59,7 @@ def get_user_by_email(auth_header, email):
     }
     """
     response = requests.post(
-        "http://localhost:5000/graphql",
+        f"{backend_url}/graphql",
         json={"query": query, "variables": {"email": email}},
         headers=auth_header,
     )
@@ -67,7 +68,7 @@ def get_user_by_email(auth_header, email):
     return response.json()["data"]["userByEmail"]
 
 
-def create_user(auth_header, body):
+def create_user(backend_url, auth_header, body):
     query = """
     mutation($user: CreateUserDTO!) {
         createUser(user: $user) {
@@ -80,20 +81,20 @@ def create_user(auth_header, body):
     }        
     """
     response = requests.post(
-        "http://localhost:5000/graphql",
+        f"{backend_url}/graphql",
         json={"query": query, "variables": {"user": body}},
         headers=auth_header,
     )
     assert "data" in response.json()
     assert "createUser" in response.json()["data"]
-    expected = {k: v for k, v in body.items() if k != "password"}
     data = response.json()["data"]["createUser"]
+    expected = {k: v for k, v in body.items() if k != "password"}
     actual = {k: v for k, v in data.items() if k in body}
     assert actual == expected
     return data
 
 
-def update_user(auth_header, id, body):
+def update_user(backend_url, auth_header, id, body):
     query = """
     mutation($id: ID!, $user: UpdateUserDTO!) {
         updateUser(id: $id, user: $user) {
@@ -106,7 +107,7 @@ def update_user(auth_header, id, body):
     }        
     """
     response = requests.post(
-        "http://localhost:5000/graphql",
+        f"{backend_url}/graphql",
         json={"query": query, "variables": {"id": id, "user": body}},
         headers=auth_header,
     )
@@ -118,14 +119,14 @@ def update_user(auth_header, id, body):
     return data
 
 
-def delete_user(auth_header, id):
+def delete_user(backend_url, auth_header, id):
     query = """
     mutation($id: ID!) {
         deleteUserById(id: $id)
     }
     """
     response = requests.post(
-        "http://localhost:5000/graphql",
+        f"{backend_url}/graphql",
         json={"query": query, "variables": {"id": id}},
         headers=auth_header,
     )
@@ -134,43 +135,34 @@ def delete_user(auth_header, id):
     return response.json()["data"]["deleteUserById"]
 
 
-def test_users_gql(auth_header, lang, api):
+def test_users_gql(backend_url, auth_header, lang, api):
     if not auth_header or api == "rest":
         return
 
-    if lang == "ts":
-        body1 = {
-            "firstName": "Test",
-            "lastName": "Script",
-            "role": "User",
-            "email": "infra@uwblueprint.org",
-            "password": "password",
-        }
-        body2 = {
-            "firstName": "Test2",
-            "lastName": "Script2",
-            "role": "User",
-            "email": "infra@uwblueprint.org",
-        }
-    else:
-        body1 = {
-            "first_name": "Test",
-            "last_name": "Script",
-            "role": "User",
-            "email": "infra@uwblueprint.org",
-            "password": "password123",
-        }
-        body2 = {
-            "first_name": "Test2",
-            "last_name": "Script2",
-            "role": "User",
-            "email": "infra@uwblueprint.org",
-        }
-    user = create_user(auth_header, body1)
-    updated_user = update_user(auth_header, user["id"], body2)
-    retrieved_user_by_id = get_user_by_id(auth_header, user["id"])
+    body1 = {
+        "firstName": "Test",
+        "lastName": "Script",
+        "role": "User",
+        "email": "infra@uwblueprint.org",
+        "password": "password",
+    }
+    body2 = {
+        "firstName": "Test2",
+        "lastName": "Script2",
+        "role": "User",
+        "email": "infra@uwblueprint.org",
+    }
+    if lang != "ts":
+        body1 = {inflection.underscore(k): v for k, v in body1.items()}
+        body2 = {inflection.underscore(k): v for k, v in body2.items()}
+
+    user = create_user(backend_url, auth_header, body1)
+    updated_user = update_user(backend_url, auth_header, user["id"], body2)
+    retrieved_user_by_id = get_user_by_id(backend_url, auth_header, user["id"])
     assert updated_user == retrieved_user_by_id
-    retrieved_user_by_email = get_user_by_email(auth_header, updated_user["email"])
+    retrieved_user_by_email = get_user_by_email(
+        backend_url, auth_header, updated_user["email"]
+    )
     assert updated_user == retrieved_user_by_email
-    get_users(auth_header)
-    delete_user(auth_header, user["id"])
+    assert get_users(backend_url, auth_header)
+    delete_user(backend_url, auth_header, user["id"])
