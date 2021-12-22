@@ -34,14 +34,14 @@ def logout(backend_url, auth_header, id):
     assert response.status_code == 204
 
 
-def test_auth(backend_url, auth_header, auth_user, lang, api):
+def test_auth(backend_url, auth_header, auth_user, lang, api, new_user_email):
     if not auth_header or api != "rest":
         return
 
     body = {
         "firstName": "Test",
         "lastName": "Script",
-        "email": "infra@uwblueprint.org",
+        "email": new_user_email,
         "password": "password123",
     }
     access_token_field = "accessToken"

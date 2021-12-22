@@ -135,7 +135,7 @@ def delete_user(backend_url, auth_header, id):
     return response.json()["data"]["deleteUserById"]
 
 
-def test_users_gql(backend_url, auth_header, lang, api):
+def test_users_gql(backend_url, auth_header, lang, api, new_user_email):
     if not auth_header or api == "rest":
         return
 
@@ -143,14 +143,14 @@ def test_users_gql(backend_url, auth_header, lang, api):
         "firstName": "Test",
         "lastName": "Script",
         "role": "User",
-        "email": "infra@uwblueprint.org",
+        "email": new_user_email,
         "password": "password",
     }
     body2 = {
         "firstName": "Test2",
         "lastName": "Script2",
         "role": "User",
-        "email": "infra@uwblueprint.org",
+        "email": new_user_email,
     }
     if lang != "ts":
         body1 = {inflection.underscore(k): v for k, v in body1.items()}

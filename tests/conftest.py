@@ -41,6 +41,11 @@ def backend_url():
     return os.getenv("TEST_SCRIPT_BACKEND_URL")
 
 
+@pytest.fixture(scope="session")
+def new_user_email():
+    return os.getenv("TEST_SCRIPT_NEW_USER_EMAIL")
+
+
 @pytest.fixture(scope="module")
 def auth_user(backend_url, api, auth):
     if not auth:
