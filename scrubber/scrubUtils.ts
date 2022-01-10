@@ -179,7 +179,7 @@ export function removeFileOrDir(filePath: string): Promise<void> {
   const stat = fs.statSync(filePath);
   if (stat.isDirectory()) {
     return new Promise((resolve, reject) =>
-      fs.rmdir(filePath, { recursive: true }, (err) => {
+      fs.rm(filePath, { recursive: true }, (err) => {
         if (err) {
           reject(err);
         }
