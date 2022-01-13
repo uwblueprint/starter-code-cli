@@ -2,11 +2,17 @@
   "cliOptionsToActions": {
     "typescript": {
       "tagsToKeep": ["typescript"],
-      "filesToDelete": ["backend/python/"]
+      "filesToDelete": [
+        "backend/python/",
+        ".github/workflows/heroku-deploy-dev-py.yml"
+      ]
     },
     "python": {
       "tagsToKeep": ["python"],
-      "filesToDelete": ["backend/typescript/"]
+      "filesToDelete": [
+        "backend/typescript/",
+        ".github/workflows/heroku-deploy-dev-ts.yml"
+      ]
     },
     "rest": {
       "tagsToKeep": ["rest"],
