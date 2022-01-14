@@ -60,6 +60,7 @@
         "backend/typescript/middlewares/validators/authValidators.ts",
         "backend/typescript/middlewares/validators/userValidators.ts",
         "backend/typescript/utilities/firebaseRestClient.ts",
+        "backend/typescript/migrations/2022.01.10T17.43.41.create-user-table.ts",
         "backend/python/app/services/implementations/user_service.py",
         "backend/python/app/services/interfaces/user_service.py",
         "backend/python/app/services/implementations/auth_service.py",
