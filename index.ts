@@ -22,7 +22,7 @@ async function run() {
     const options = await cli(process.argv);
     await scrub(rootDir, options);
   } catch (err) {
-    console.log(chalk.red.bold(err.message));
+    console.log(chalk.red.bold((err as Error).message));
   }
 }
 

@@ -164,9 +164,8 @@ export function scrubDir(
   return Promise.all(promises);
 }
 
-export function removeFileOrDir(filePath: string): Promise<void> {
+export async function removeFileOrDir(filePath: string) {
   const exists = fs.existsSync(filePath);
-
   if (!exists) {
     console.warn(
       chalk.yellowBright.bold(
@@ -176,28 +175,12 @@ export function removeFileOrDir(filePath: string): Promise<void> {
     return Promise.resolve();
   }
 
-  const stat = fs.statSync(filePath);
-  if (stat.isDirectory()) {
-    return new Promise((resolve, reject) =>
-      fs.rm(filePath, { recursive: true }, (err) => {
-        if (err) {
-          reject(err);
-        }
-        resolve();
-      }),
-    );
-  }
-
-  if (stat.isFile()) {
-    return new Promise((resolve, reject) =>
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          reject(err);
-        }
-        resolve();
-      }),
-    );
-  }
+  return fs.rm(filePath, { recursive: true }, (err) => {
+    if (err) {
+      Promise.reject(err);
+    }
+    Promise.resolve();
+  });
 
   console.warn(
     chalk.yellowBright.bold(
