@@ -11,8 +11,10 @@ const FILE_TYPE_COMMENT: { [key: string]: string } = {
   json: "//",
   ts: "//",
   py: "#",
+  pyc: "#",
   tsx: "//",
   jsx: "//",
+  yml: "#",
 };
 
 export function getAllTagsAndSetToRemove(
