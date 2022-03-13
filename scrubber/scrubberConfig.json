@@ -3,14 +3,14 @@
     "typescript": {
       "tagsToKeep": ["typescript"],
       "filesToDelete": [
-        "backend/python/",
+        "backend/python",
         ".github/workflows/heroku-deploy-dev-py.yml"
       ]
     },
     "python": {
       "tagsToKeep": ["python"],
       "filesToDelete": [
-        "backend/typescript/",
+        "backend/typescript",
         ".github/workflows/heroku-deploy-dev-ts.yml"
       ]
     },
