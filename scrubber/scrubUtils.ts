@@ -6,15 +6,15 @@ import { TagNameToAction, CLIOptionActions } from "./scrubberTypes";
 const TAG_START_CHAR = "{";
 const TAG_END_CHAR = "}";
 
-const FILE_TYPE_COMMENT: { [key: string]: string } = {
-  js: "//",
-  json: "//",
-  ts: "//",
-  py: "#",
-  pyc: "#",
-  tsx: "//",
-  jsx: "//",
-  yml: "#",
+const FILE_TYPE_COMMENT: { [key: string]: string[] } = {
+  js: ["//", "/*"],
+  json: ["//"],
+  ts: ["//", "/*"],
+  py: ["#", '"""'],
+  pyc: ["#", '"""'],
+  tsx: ["//", "/*"],
+  jsx: ["//", "/*"],
+  yml: ["#"],
 };
 
 export function getAllTagsAndSetToRemove(
@@ -41,7 +41,7 @@ export function scrubFile(
       }
 
       const ext = filePath.split(".").pop();
-      const commentType = ext && FILE_TYPE_COMMENT[ext];
+      const commentTypes = ext && FILE_TYPE_COMMENT[ext];
       const scrubbedLines: string[] = [];
       let skip = false;
       let currentTag = "";
@@ -60,8 +60,8 @@ export function scrubFile(
         // Split on whitespace
         const tokens = line.trim().split(/[ ]+/);
 
-        if (commentType) {
-          if (tokens[0] !== commentType) {
+        if (commentTypes) {
+          if (!commentTypes.includes(tokens[0])) {
             tryProcessTag = false;
           }
           tokens.shift();
