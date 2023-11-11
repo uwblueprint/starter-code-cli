@@ -70,16 +70,9 @@ class Scrubber {
       filesToDelete,
     ).map((filePath: string) => removeFileOrDir(filePath));
 
-    const scrubDirPromise = scrubDir(
-      this.config.dir,
-      ignoreFiles,
-      tags,
-      isDryRun,
-    );
-
     // Remove files first, then scrub.
     return Promise.all(removeFilePromises)
-      .then(() => scrubDirPromise)
+      .then(() => scrubDir(this.config!.dir, ignoreFiles, tags, isDryRun))
       .catch((err) => Promise.reject(err));
   }
 }
