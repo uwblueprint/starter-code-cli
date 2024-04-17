@@ -37,6 +37,7 @@ type OptionConfigs = {
   fileStorage: OptionConfig<void>;
   outputDir: OptionConfig<void>;
   testing: OptionConfig<void>;
+  branch: OptionConfig<void>;
 };
 
 const OPTIONS: OptionConfigs = {
@@ -85,12 +86,19 @@ const OPTIONS: OptionConfigs = {
     id: "o",
     description: "Output directory",
     message:
-      "Which directory would you like the starter code folder to be in (default is current directory)?",
+      "Which directory would you like the starter code folder to be in? (default is current directory)",
     choices: [],
   },
   testing: {
     id: "t",
     description: "Test locally without cloning repo",
+    choices: [],
+  },
+  branch: {
+    id: "br",
+    description: "Branch of repository that will be cloned",
+    message:
+      "Which branch would you like the starter code to be cloned from? (default is main)",
     choices: [],
   },
 };
@@ -162,6 +170,11 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
       type: "boolean",
       description: OPTIONS.testing.description,
     },
+    branch: {
+      alias: OPTIONS.branch.id,
+      type: "string",
+      description: OPTIONS.branch.description,
+    },
   });
 
   return {
@@ -172,6 +185,7 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
     fileStorage: argv.fileStorage,
     outputDir: argv.outputDir,
     testing: argv.testing,
+    branch: argv.branch,
   };
 };
 
@@ -245,6 +259,15 @@ const promptOptions = async (
     });
   }
 
+  if (options.testing && !options.branch) {
+    prompts.push({
+      type: "output",
+      name: "branch",
+      message: OPTIONS.branch.message,
+      default: "main",
+    });
+  }
+
   answers = await inquirer.prompt(prompts);
 
   const authOption = (options.auth || answers.auth
@@ -263,6 +286,7 @@ const promptOptions = async (
       fileStorage: fileStorageOption,
     },
     outputDir: options.outputDir || answers.outputDir,
+    branch: options.branch || answers.branch,
   };
 };
 
@@ -281,10 +305,8 @@ const confirmPrompt = async (options: Options) => {
 
   const message =
     `You have chosen to create a ${backendName} app with a ` +
-    `${apiName} API, ${databaseName} database, ${
-      options.auth === "auth" ? "" : "no "
-    }built-in auth, and ${
-      options.fileStorage === "file-storage" ? "" : "no "
+    `${apiName} API, ${databaseName} database, ${options.auth === "auth" ? "" : "no "
+    }built-in auth, and ${options.fileStorage === "file-storage" ? "" : "no "
     }built-in file storage. Please confirm:`;
 
   const prompt = {
@@ -316,7 +338,7 @@ async function cli(args: CommandLineArgs): Promise<Options> {
 
   validateCommandLineOptions(commandLineOptions);
 
-  const { appOptions, outputDir } = await promptOptions(commandLineOptions);
+  const { appOptions, outputDir, branch } = await promptOptions(commandLineOptions);
 
   const confirm = await confirmPrompt(appOptions);
 
@@ -335,24 +357,24 @@ async function cli(args: CommandLineArgs): Promise<Options> {
     return Promise.reject(new Error("No directory exists. Exiting..."));
   }
 
-  if (!commandLineOptions.testing) {
-    const branch = "release-v2";
+  // Determines the branch that is cloned if the user does not select one 
+  const selectedBranch = branch ?? "main";
 
-    const clone = shell.exec(
-      `git clone --single-branch --branch ${branch} https://github.com/uwblueprint/starter-code-v2.git`,
-    );
+  const clone = shell.exec(
+    `git clone --single-branch --branch ${selectedBranch} https://github.com/uwblueprint/starter-code-v2.git`,
+  );
 
-    if (clone.code !== 0) {
-      return Promise.reject(new Error("Git clone failed. Exiting..."));
-    }
-
-    console.log(chalk.green.bold("Removing .git ..."));
-    const removeGit = shell.rm("-rf", "starter-code-v2/.git");
-
-    if (removeGit.code !== 0) {
-      return Promise.reject(new Error("Remove .git failed. Exiting..."));
-    }
+  if (clone.code !== 0) {
+    return Promise.reject(new Error("Git clone failed. Exiting..."));
   }
+
+  console.log(chalk.green.bold("Removing .git ..."));
+  const removeGit = shell.rm("-rf", "starter-code-v2/.git");
+
+  if (removeGit.code !== 0) {
+    return Promise.reject(new Error("Remove .git failed. Exiting..."));
+  }
+
 
   return appOptions;
 }

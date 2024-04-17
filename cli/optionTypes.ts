@@ -24,9 +24,11 @@ export type CommandLineOptions = {
   fileStorage?: boolean;
   outputDir?: string;
   testing?: boolean;
+  branch?: string;
 };
 
 export type UserResponse = {
   appOptions: Options;
   outputDir: string;
+  branch: string;
 };
