@@ -37,7 +37,6 @@ type OptionConfigs = {
   fileStorage: OptionConfig<void>;
   outputDir: OptionConfig<void>;
   testing: OptionConfig<void>;
-  deprecated: OptionConfig<void>;
 };
 
 const OPTIONS: OptionConfigs = {
@@ -71,14 +70,14 @@ const OPTIONS: OptionConfigs = {
   auth: {
     id: "au",
     description:
-      "Include built-in auth features (deprecated option, always true in newest starter code)",
+      "Include built-in auth features",
     message: "Would you like built-in auth features?",
     choices: [],
   },
   fileStorage: {
     id: "f",
     description:
-      "Include built-in file storage features (deprecated option, always true in newest starter code)",
+      "Include built-in file storage features",
     message: "Would you like built-in file storage features?",
     choices: [],
   },
@@ -92,12 +91,6 @@ const OPTIONS: OptionConfigs = {
   testing: {
     id: "t",
     description: "Test locally without cloning repo",
-    choices: [],
-  },
-  deprecated: {
-    id: "de",
-    description:
-      "Use deprecated starter code (with options to opt-out of auth and file storage)",
     choices: [],
   },
 };
@@ -169,11 +162,6 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
       type: "boolean",
       description: OPTIONS.testing.description,
     },
-    deprecated: {
-      alias: OPTIONS.deprecated.id,
-      type: "boolean",
-      description: OPTIONS.deprecated.description,
-    },
   });
 
   return {
@@ -184,7 +172,6 @@ const parseArguments = (args: CommandLineArgs): CommandLineOptions => {
     fileStorage: argv.fileStorage,
     outputDir: argv.outputDir,
     testing: argv.testing,
-    deprecated: argv.deprecated,
   };
 };
 
@@ -231,7 +218,7 @@ const promptOptions = async (
     });
   }
 
-  if (!options.auth && options.deprecated) {
+  if (!options.auth) {
     prompts.push({
       type: "confirm",
       name: "auth",
@@ -240,7 +227,7 @@ const promptOptions = async (
     });
   }
 
-  if (!options.fileStorage && options.deprecated) {
+  if (!options.fileStorage) {
     prompts.push({
       type: "confirm",
       name: "fileStorage",
@@ -260,12 +247,10 @@ const promptOptions = async (
 
   answers = await inquirer.prompt(prompts);
 
-  const authOption = (!options.deprecated || options.auth || answers.auth
+  const authOption = (options.auth || answers.auth
     ? "auth"
     : "no-auth") as AuthType;
-  const fileStorageOption = (!options.deprecated ||
-  options.fileStorage ||
-  answers.fileStorage
+  const fileStorageOption = (options.fileStorage || answers.fileStorage
     ? "file-storage"
     : "no-file-storage") as FileStorageType;
 
@@ -331,14 +316,6 @@ async function cli(args: CommandLineArgs): Promise<Options> {
 
   validateCommandLineOptions(commandLineOptions);
 
-  if (commandLineOptions.deprecated) {
-    console.warn(
-      chalk.yellowBright.bold(
-        "You have chosen to use a deprecated version of starter code that is no longer maintained.",
-      ),
-    );
-  }
-
   const { appOptions, outputDir } = await promptOptions(commandLineOptions);
 
   const confirm = await confirmPrompt(appOptions);
@@ -359,7 +336,7 @@ async function cli(args: CommandLineArgs): Promise<Options> {
   }
 
   if (!commandLineOptions.testing) {
-    const branch = commandLineOptions.deprecated ? "release" : "release-v2";
+    const branch = "release-v2";
 
     const clone = shell.exec(
       `git clone --single-branch --branch ${branch} https://github.com/uwblueprint/starter-code-v2.git`,

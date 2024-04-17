@@ -24,7 +24,6 @@ export type CommandLineOptions = {
   fileStorage?: boolean;
   outputDir?: string;
   testing?: boolean;
-  deprecated?: boolean;
 };
 
 export type UserResponse = {
