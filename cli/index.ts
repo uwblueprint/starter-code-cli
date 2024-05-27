@@ -98,7 +98,7 @@ const OPTIONS: OptionConfigs = {
     id: "br",
     description: "Branch of repository that will be cloned",
     message:
-      "Which branch would you like the starter code to be cloned from? (default is main)",
+      "Which branch would you like the starter code to be cloned from? (default is release-v2)",
     choices: [],
   },
 };
@@ -264,7 +264,7 @@ const promptOptions = async (
       type: "output",
       name: "branch",
       message: OPTIONS.branch.message,
-      default: "main",
+      default: "release-v2",
     });
   }
 
