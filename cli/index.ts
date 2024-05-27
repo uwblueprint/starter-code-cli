@@ -358,7 +358,7 @@ async function cli(args: CommandLineArgs): Promise<Options> {
   }
 
   // Determines the branch that is cloned if the user does not select one 
-  const selectedBranch = branch ?? "main";
+  const selectedBranch = branch ?? "release-v2";
 
   const clone = shell.exec(
     `git clone --single-branch --branch ${selectedBranch} https://github.com/uwblueprint/starter-code-v2.git`,
