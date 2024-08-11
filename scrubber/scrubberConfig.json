@@ -27,15 +27,17 @@
       ]
     },
     "postgresql": {
-      "tagsToKeep": ["postgresql"]
+      "tagsToKeep": ["postgresql"],
+      "filesToDelete": [
+        "backend/typescript/models"
+      ]
     },
     "mongodb": {
       "tagsToKeep": ["mongodb"],
       "filesToDelete": [
         "backend/typescript/migrate.js",
-        "backend/typescript/migrations",
-        "backend/typescript/umzug.ts",
-        "backend/python/migrations"
+        "backend/python/migrations",
+        "backend/typescript/prisma"
       ]
     },
     "auth": {
